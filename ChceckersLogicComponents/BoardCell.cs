@@ -1,29 +1,41 @@
-﻿using System;
+﻿
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ChceckersLogicComponents
 {
     public struct BoardCell
     {
+        private const int k_DefualtAxisPoint = -1;
         public int X {  get; set; }
         public int Y { get; set; }
         public GameUtilities.ePlayerSign PlayerSign { get; set; }
-        public BoardCell Defualt
+        public BoardCell DefualtCell
         {
             get
             {
-                return new BoardCell(- 1, -1);
+                return new BoardCell(k_DefualtAxisPoint, k_DefualtAxisPoint);
             }
         }
 
-        public BoardCell(int i_XAxis, int i_YAxis, GameUtilities.ePlayerSign i_PlayerSign = GameUtilities.ePlayerSign.empty)
+        public BoardCell(int i_XAxis=0, int i_YAxis=0, GameUtilities.ePlayerSign i_PlayerSign=GameUtilities.ePlayerSign.empty)
         {
             X = i_XAxis;
             Y = i_YAxis;
             PlayerSign = i_PlayerSign;
+        }
+
+        public BoardCell(List<int> i_Axes, GameUtilities.ePlayerSign i_PlayerSign = GameUtilities.ePlayerSign.empty)
+        {
+            if( i_Axes.Count >= 2)
+            {
+                X = i_Axes[0];
+                Y = i_Axes[1];
+                PlayerSign = i_PlayerSign;
+            }
+            else
+            {
+                throw new System.Exception("Not enough parameters");
+            }
         }
 
         public static bool operator ==(BoardCell lhs, BoardCell rhs)
@@ -38,7 +50,7 @@ namespace ChceckersLogicComponents
         public override bool Equals(object obj)
         {
             bool areEquals = false;
-            BoardCell otherCell = new BoardCell().Defualt;
+            BoardCell otherCell = new BoardCell().DefualtCell;
 
             if (obj != null || GetType() == obj.GetType())
             {

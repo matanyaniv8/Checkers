@@ -17,6 +17,11 @@ namespace ChceckersLogicComponents
             Right = 1,
         }
 
+        private const string k_SlotIsTakenError = "Selected Location Is Already Taken!";
+        private const string k_LocationNotDiagonallyError = "Next Location is not Diagonally To Your Current Selected Troop";
+        private const string k_IndicesNotInRangeError = "Indices Are Not In Range";
+        private const int k_DefualtBoardSize = 8;
+        private readonly GameUtilities.ePlayerSign[,] r_Board = null;
         private Dictionary<string, BoardCell> r_PossibleComputerDirections = new Dictionary<string, BoardCell>
         {
             { "UpLeft", new BoardCell((int)eDirection.Up, (int)eDirection.Left) },
@@ -24,12 +29,6 @@ namespace ChceckersLogicComponents
             {"DownLeft", new BoardCell((int)eDirection.Down, (int)eDirection.Left) },
             {"DownRight", new BoardCell((int)eDirection.Down, (int)eDirection.Right) }
         };
-
-        private const string k_SlotIsTakenError = "Selected Location Is Already Taken!";
-        private const string k_LocationNotDiagonallyError = "Next Location is not Diagonally To Your Current Selected Troop";
-        private const string k_IndicesNotInRangeError = "Indices Are Not In Range";
-        private const int k_DefualtBoardSize = 8;
-        private readonly GameUtilities.ePlayerSign[,] r_Board = null;
         public  GameUtilities.ePlayerSign[,] GameBoard { get { return r_Board; } }
         public bool IsFirstPlayerTurn { get; private set; }
         public int BoardSize { get; private set; }
@@ -47,26 +46,57 @@ namespace ChceckersLogicComponents
         {
             bool isPossibleToMakeAMove = false;
             
-            if(isNextLocationIsDiagonalToCurrentLocation(i_CurrentTroopLocation, i_NextTroopLocation))
-            {
-                if (isSlotEmpty(i_PlayerThatMakesAMove, i_NextTroopLocation))
+            if(!isPlayerTryingToMoveForwardOrBackward(i_CurrentTroopLocation, i_NextTroopLocation))
+            { 
+                if(isNextLocationIsDiagonalToCurrentLocation(i_CurrentTroopLocation, i_NextTroopLocation))
                 {
-                    makeMoveAndUpdatesPlayers(i_PlayerThatMakesAMove, i_SecondPlayer, i_CurrentTroopLocation, i_NextTroopLocation);
+                    if (isSlotEmpty(i_PlayerThatMakesAMove, i_NextTroopLocation))
+                    {
+                       isPossibleToMakeAMove = makeMoveAndUpdatesPlayers(i_PlayerThatMakesAMove, i_SecondPlayer, i_CurrentTroopLocation, i_NextTroopLocation);
+                    }
+                    else
+                    {
+                        throw new Exception(k_SlotIsTakenError);
+                    }
                 }
                 else
                 {
-                    throw new Exception(k_SlotIsTakenError);
+                    throw new Exception(k_LocationNotDiagonallyError);
                 }
             }
-            else
+            else if(isSlotEmpty(i_PlayerThatMakesAMove, i_NextTroopLocation))
             {
-                throw new Exception(k_LocationNotDiagonallyError);
+                isPossibleToMakeAMove = makeTheMove(i_PlayerThatMakesAMove, i_CurrentTroopLocation, i_NextTroopLocation);
             }
 
 
             return isPossibleToMakeAMove;
         }
 
+        private GameUtilities.ePlayerSign getPlayerSignFromBoardCell(BoardCell i_CellLocation)
+        {
+            return GameBoard[(int)i_CellLocation.X, (int)i_CellLocation.Y];
+        }
+
+        private bool isPlayerTryingToMoveForwardOrBackward(BoardCell i_CurrentTroopLocation, BoardCell i_NextTroopLocation)
+        {
+            bool isTryingToMoveBackward = i_NextTroopLocation.Y == i_CurrentTroopLocation.Y && (i_CurrentTroopLocation.X - 1 == i_NextTroopLocation.X || i_CurrentTroopLocation.X + 1 == i_NextTroopLocation.X);
+            bool isNextCellLocationSignIsEmpty = getPlayerSignFromBoardCell(i_NextTroopLocation) == GameUtilities.ePlayerSign.empty;
+            bool isCurrentPlayerSlotIsNotEmpty = getPlayerSignFromBoardCell(i_CurrentTroopLocation) != GameUtilities.ePlayerSign.empty;
+
+            return isTryingToMoveBackward && isNextCellLocationSignIsEmpty && isCurrentPlayerSlotIsNotEmpty;
+        }
+
+        private bool makeTheMove(Player i_PlayerThatMakesAMove, BoardCell i_CurrentTroopLocation, BoardCell i_NextTroopLocation)
+        {
+            bool isPossibleToMakeAMove = false;
+            
+            r_Board[(int)i_CurrentTroopLocation.X, (int)i_CurrentTroopLocation.Y] = GameUtilities.ePlayerSign.empty;
+            r_Board[(int)i_NextTroopLocation.X, (int)i_NextTroopLocation.Y] = i_PlayerThatMakesAMove.PlayerSign;
+            isPossibleToMakeAMove = true;
+
+            return isPossibleToMakeAMove;
+        }
         private bool makeMoveAndUpdatesPlayers(Player i_PlayerThatMakesAMove, Player i_SecondPlayer, BoardCell i_CurrentTroopLocation, BoardCell i_NextTroopLocation)
         {
             bool isPossibleToMakeAMove = false;
@@ -83,9 +113,11 @@ namespace ChceckersLogicComponents
                 i_SecondPlayer.NumberOfTroopsRemaining--;
             }
 
+            isPossibleToMakeAMove = makeTheMove(i_PlayerThatMakesAMove,i_CurrentTroopLocation, i_NextTroopLocation);
+/*
             r_Board[rowIndex, colIndex] = GameUtilities.ePlayerSign.empty;
             r_Board[(int)i_NextTroopLocation.X, (int)i_NextTroopLocation.Y] = i_PlayerThatMakesAMove.PlayerSign;
-            isPossibleToMakeAMove = true;
+            isPossibleToMakeAMove = true;*/
 
             return isPossibleToMakeAMove;
         }
