@@ -59,11 +59,11 @@ namespace CheckersWinform
 
         private static void printBoard(CheckersGameLogic i_GameBoardToPrint)
         {
-            Console.WriteLine(columnsNumbers(i_GameBoardToPrint.CheckersBoard.BoardSize));
+            Console.WriteLine(columnsNumbers(i_GameBoardToPrint.BoardSize));
 
             if(i_GameBoardToPrint != null)
             {
-                for(int i = 0; i < i_GameBoardToPrint.CheckersBoard.BoardSize; i++)
+                for(int i = 0; i < i_GameBoardToPrint.BoardSize; i++)
                 {
                     Console.WriteLine(getLineFromBoard(i_GameBoardToPrint, i));
                 }
@@ -97,10 +97,10 @@ namespace CheckersWinform
 
             boardLine.Append((i_LineNumber + 1) + "|");
 
-            for (int i = 0; i< i_GameBoardToPrint.CheckersBoard.BoardSize; i++)
+            for (int i = 0; i< i_GameBoardToPrint.BoardSize; i++)
             {
                 slotSignToPrint = defualtSlotSign;
-                currentSlotValue = i_GameBoardToPrint.CheckersBoard.GameBoard[i_LineNumber, i];
+                currentSlotValue = i_GameBoardToPrint.GetCellValue(i_LineNumber, i);
 
                 if(currentSlotValue != GameUtilities.ePlayerSign.empty)
                 {
@@ -143,7 +143,7 @@ namespace CheckersWinform
                 }
             }
 
-            return new BoardCell(userChoiceAsInt, i_CheckersGame.CheckersBoard.GameBoard[userChoiceAsInt[0], userChoiceAsInt[1]]);
+            return new BoardCell(userChoiceAsInt, i_CheckersGame.GetCellValue(userChoiceAsInt[0], userChoiceAsInt[1]));
         }
     }
 }

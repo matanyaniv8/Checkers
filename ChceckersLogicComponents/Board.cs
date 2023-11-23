@@ -5,7 +5,8 @@ using PlayerSign = ChceckersLogicComponents.GameUtilities.ePlayerSign;
 namespace ChceckersLogicComponents
 {
     public class Board
-    { 
+    {
+        private const int k_NumberOfRowsToPutTroopsInBoard = 3;
         private const string k_LocationNotDiagonallyError = "Next Location is not Diagonally To Your Current Selected Troop";
         private const string k_IndicesNotInRangeError = "Indices Are Not In Range";
         private const int k_DefualtBoardSize = 8;
@@ -24,6 +25,25 @@ namespace ChceckersLogicComponents
             r_RowsNumbersForADoubleMove = new List<int>(){0,2, BoardSize -3, BoardSize -1};
         }
 
+        internal void InitializeBoard(PlayerSign i_FirstPlayerSign, PlayerSign i_SecondPlayerSign)
+        {
+            int bottomDownIndex = 0;
+
+            for (int upDownIndex = 0; upDownIndex < k_NumberOfRowsToPutTroopsInBoard; upDownIndex++)
+            {
+                bottomDownIndex = BoardSize - upDownIndex - 1;
+                initializeARow(upDownIndex, i_SecondPlayerSign);
+                initializeARow(bottomDownIndex, i_FirstPlayerSign);
+            }
+        }
+
+        private void initializeARow(int i_RowIndex, PlayerSign i_GamePlayerSign)
+        {
+            for (int colIndex = (i_RowIndex % 2 != 0) ? 0 : 1; colIndex <BoardSize; colIndex += 2)
+            {
+                GameBoard[i_RowIndex, colIndex] = i_GamePlayerSign;
+            }
+        }
         internal bool MakeAMove(Player i_PlayerThatMakesAMove, Player i_SecondPlayer,BoardCell i_CurrentTroopLocation, BoardCell i_NextTroopLocation)
         {
             bool isPossibleToMakeAMove = false;
@@ -33,7 +53,7 @@ namespace ChceckersLogicComponents
             { 
                 if(IsNextLocationIsDiagonalToCurrentLocation(i_CurrentTroopLocation, i_NextTroopLocation)
                     && 
-                    getPlayerSignFromBoardCell(i_NextTroopLocation) != PlayerSign.empty)
+                    GetPlayerSignFromBoardCell(i_NextTroopLocation) != PlayerSign.empty)
                 {
                     isPossibleToMakeAMove = makeMoveAndUpdatesPlayers(i_PlayerThatMakesAMove, i_SecondPlayer, i_CurrentTroopLocation, i_NextTroopLocation);
                 }
@@ -51,17 +71,28 @@ namespace ChceckersLogicComponents
             return isPossibleToMakeAMove;
         }
 
-        private PlayerSign getPlayerSignFromBoardCell(BoardCell i_CellLocation)
+        internal PlayerSign GetPlayerSignFromBoardCell(BoardCell i_CellLocation)
         {
-            return GameBoard[(int)i_CellLocation.X, (int)i_CellLocation.Y];
+            PlayerSign cellSign = PlayerSign.empty;
+
+            if (IsIndicesWithinRange(i_CellLocation.X, i_CellLocation.Y))
+            {
+                cellSign = GameBoard[(int)i_CellLocation.X, (int)i_CellLocation.Y];
+            }
+            else
+            {
+                throw new Exception(k_IndicesNotInRangeError);
+            }
+
+            return cellSign;
         }
 
         internal bool IsPlayerTryingToMoveForwardOrBackward(PlayerSign i_PlayerThatMakesTheMove, BoardCell i_CurrentTroopLocation, BoardCell i_NextTroopLocation)
         {
             bool isTryingToMoveForward = isMovingForwardAllowed(i_PlayerThatMakesTheMove,i_CurrentTroopLocation, i_NextTroopLocation);
             bool isTryingToMoveBackwards = isMovingBackwardAllowed(i_PlayerThatMakesTheMove, i_CurrentTroopLocation, i_NextTroopLocation);
-            bool isNextCellLocationSignIsEmpty = getPlayerSignFromBoardCell(i_NextTroopLocation) == PlayerSign.empty;
-            bool isCurrentPlayerSlotIsNotEmpty = getPlayerSignFromBoardCell(i_CurrentTroopLocation) != PlayerSign.empty;
+            bool isNextCellLocationSignIsEmpty = GetPlayerSignFromBoardCell(i_NextTroopLocation) == PlayerSign.empty;
+            bool isCurrentPlayerSlotIsNotEmpty = GetPlayerSignFromBoardCell(i_CurrentTroopLocation) != PlayerSign.empty;
 
 
             return (isTryingToMoveForward || isTryingToMoveBackwards) && isNextCellLocationSignIsEmpty && isCurrentPlayerSlotIsNotEmpty;
@@ -113,8 +144,8 @@ namespace ChceckersLogicComponents
 
         internal bool IsNextLocationIsDiagonalToCurrentLocation(BoardCell i_CurrentLocation, BoardCell i_CandidatePoint)
         {
-            PlayerSign currentCellSign = getPlayerSignFromBoardCell(i_CurrentLocation);
-            PlayerSign candidateCellSign = getPlayerSignFromBoardCell(i_CandidatePoint);
+            PlayerSign currentCellSign = GetPlayerSignFromBoardCell(i_CurrentLocation);
+            PlayerSign candidateCellSign = GetPlayerSignFromBoardCell(i_CandidatePoint);
             int horizontalDistance = (int)Math.Abs(i_CurrentLocation.X - i_CandidatePoint.X);
             int verticalDistance = (int)Math.Abs(i_CurrentLocation.Y - i_CandidatePoint.Y);
             bool isCellsTypeAreDifferent = currentCellSign != candidateCellSign && 
