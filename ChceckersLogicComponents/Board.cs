@@ -1,35 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+using PlayerSign = ChceckersLogicComponents.GameUtilities.ePlayerSign;
 
 namespace ChceckersLogicComponents
 {
     public class Board
     { 
-        public enum eDirection
-        {
-            Down = 1,
-            Up = -1,
-            Left = -1,
-            Right = 1,
-        }
-
-        private const string k_SlotIsTakenError = "Selected Location Is Already Taken!";
         private const string k_LocationNotDiagonallyError = "Next Location is not Diagonally To Your Current Selected Troop";
         private const string k_IndicesNotInRangeError = "Indices Are Not In Range";
         private const int k_DefualtBoardSize = 8;
-        private readonly GameUtilities.ePlayerSign[,] r_Board = null;
-        private Dictionary<string, BoardCell> r_PossibleComputerDirections = new Dictionary<string, BoardCell>
-        {
-            { "UpLeft", new BoardCell((int)eDirection.Up, (int)eDirection.Left) },
-            {"UpRight", new BoardCell((int)eDirection.Up, (int)eDirection.Right) },
-            {"DownLeft", new BoardCell((int)eDirection.Down, (int)eDirection.Left) },
-            {"DownRight", new BoardCell((int)eDirection.Down, (int)eDirection.Right) }
-        };
-        public  GameUtilities.ePlayerSign[,] GameBoard { get { return r_Board; } }
+        private readonly PlayerSign[,] r_Board = null;
+        private readonly List<int> r_RowsNumbersForADoubleMove = null;
+        public PlayerSign[,] GameBoard { get { return r_Board; } }
         public bool IsFirstPlayerTurn { get; private set; }
         public int BoardSize { get; private set; }
         public bool IsSecondPlayerComputer {  get; private set; }
@@ -37,34 +19,30 @@ namespace ChceckersLogicComponents
         public Board(bool i_IsSecondPlayerIsHuman, int i_BoardSize = k_DefualtBoardSize)
         {
             BoardSize = i_BoardSize;
-            r_Board = new GameUtilities.ePlayerSign[BoardSize, BoardSize];
+            r_Board = new PlayerSign[BoardSize, BoardSize];
             IsSecondPlayerComputer = i_IsSecondPlayerIsHuman;
-            
+            r_RowsNumbersForADoubleMove = new List<int>(){0,2, BoardSize -3, BoardSize -1};
         }
 
         internal bool MakeAMove(Player i_PlayerThatMakesAMove, Player i_SecondPlayer,BoardCell i_CurrentTroopLocation, BoardCell i_NextTroopLocation)
         {
             bool isPossibleToMakeAMove = false;
+            bool isPlayerTryMoveBackwardOrForward = IsPlayerTryingToMoveForwardOrBackward(i_PlayerThatMakesAMove.PlayerSign, i_CurrentTroopLocation, i_NextTroopLocation);
             
-            if(!isPlayerTryingToMoveForwardOrBackward(i_CurrentTroopLocation, i_NextTroopLocation))
+            if (!isPlayerTryMoveBackwardOrForward)
             { 
-                if(isNextLocationIsDiagonalToCurrentLocation(i_CurrentTroopLocation, i_NextTroopLocation))
+                if(IsNextLocationIsDiagonalToCurrentLocation(i_CurrentTroopLocation, i_NextTroopLocation)
+                    && 
+                    getPlayerSignFromBoardCell(i_NextTroopLocation) != PlayerSign.empty)
                 {
-                    if (isSlotEmpty(i_PlayerThatMakesAMove, i_NextTroopLocation))
-                    {
-                       isPossibleToMakeAMove = makeMoveAndUpdatesPlayers(i_PlayerThatMakesAMove, i_SecondPlayer, i_CurrentTroopLocation, i_NextTroopLocation);
-                    }
-                    else
-                    {
-                        throw new Exception(k_SlotIsTakenError);
-                    }
+                    isPossibleToMakeAMove = makeMoveAndUpdatesPlayers(i_PlayerThatMakesAMove, i_SecondPlayer, i_CurrentTroopLocation, i_NextTroopLocation);
                 }
                 else
                 {
                     throw new Exception(k_LocationNotDiagonallyError);
                 }
             }
-            else if(isSlotEmpty(i_PlayerThatMakesAMove, i_NextTroopLocation))
+            else if(IsSlotEmpty(i_PlayerThatMakesAMove, i_NextTroopLocation) && isPlayerTryMoveBackwardOrForward)
             {
                 isPossibleToMakeAMove = makeTheMove(i_PlayerThatMakesAMove, i_CurrentTroopLocation, i_NextTroopLocation);
             }
@@ -73,56 +51,110 @@ namespace ChceckersLogicComponents
             return isPossibleToMakeAMove;
         }
 
-        private GameUtilities.ePlayerSign getPlayerSignFromBoardCell(BoardCell i_CellLocation)
+        private PlayerSign getPlayerSignFromBoardCell(BoardCell i_CellLocation)
         {
             return GameBoard[(int)i_CellLocation.X, (int)i_CellLocation.Y];
         }
 
-        private bool isPlayerTryingToMoveForwardOrBackward(BoardCell i_CurrentTroopLocation, BoardCell i_NextTroopLocation)
+        internal bool IsPlayerTryingToMoveForwardOrBackward(PlayerSign i_PlayerThatMakesTheMove, BoardCell i_CurrentTroopLocation, BoardCell i_NextTroopLocation)
         {
-            bool isTryingToMoveBackward = i_NextTroopLocation.Y == i_CurrentTroopLocation.Y && (i_CurrentTroopLocation.X - 1 == i_NextTroopLocation.X || i_CurrentTroopLocation.X + 1 == i_NextTroopLocation.X);
-            bool isNextCellLocationSignIsEmpty = getPlayerSignFromBoardCell(i_NextTroopLocation) == GameUtilities.ePlayerSign.empty;
-            bool isCurrentPlayerSlotIsNotEmpty = getPlayerSignFromBoardCell(i_CurrentTroopLocation) != GameUtilities.ePlayerSign.empty;
+            bool isTryingToMoveForward = isMovingForwardAllowed(i_PlayerThatMakesTheMove,i_CurrentTroopLocation, i_NextTroopLocation);
+            bool isTryingToMoveBackwards = isMovingBackwardAllowed(i_PlayerThatMakesTheMove, i_CurrentTroopLocation, i_NextTroopLocation);
+            bool isNextCellLocationSignIsEmpty = getPlayerSignFromBoardCell(i_NextTroopLocation) == PlayerSign.empty;
+            bool isCurrentPlayerSlotIsNotEmpty = getPlayerSignFromBoardCell(i_CurrentTroopLocation) != PlayerSign.empty;
 
-            return isTryingToMoveBackward && isNextCellLocationSignIsEmpty && isCurrentPlayerSlotIsNotEmpty;
+
+            return (isTryingToMoveForward || isTryingToMoveBackwards) && isNextCellLocationSignIsEmpty && isCurrentPlayerSlotIsNotEmpty;
+        }
+        
+        private bool isMovingBackwardAllowed(PlayerSign i_PlayerThatMakesTheMoveSign, BoardCell i_CurrentTroopLocation, BoardCell i_NextTroopLocation)
+        {
+            bool isTryingToMoveBackward = i_NextTroopLocation.Y == i_CurrentTroopLocation.Y;
+            int bound4MovingBackwards = 3;
+
+            if(isTryingToMoveBackward == true)
+            {
+                if (i_PlayerThatMakesTheMoveSign == PlayerSign.first)
+                {
+                    bound4MovingBackwards = BoardSize - 3;
+                    isTryingToMoveBackward &= (i_CurrentTroopLocation.X + 1 == i_NextTroopLocation.X && i_CurrentTroopLocation.X < bound4MovingBackwards);
+                }
+                else if(i_PlayerThatMakesTheMoveSign == PlayerSign.second)
+                {
+                    bound4MovingBackwards = 3;
+                    isTryingToMoveBackward &= (i_CurrentTroopLocation.X - 1 == i_NextTroopLocation.X && i_CurrentTroopLocation.X >= bound4MovingBackwards);
+                }
+            }
+
+            return isTryingToMoveBackward;
+        }
+
+        private bool isMovingForwardAllowed(PlayerSign i_PlayerThatMakesTheMoveSign, BoardCell i_CurrentTroopLocation, BoardCell i_NextTroopLocation)
+        {
+            bool isTryingToMoveForward = i_CurrentTroopLocation.Y == i_NextTroopLocation.Y;
+            int currentRowIndex = i_CurrentTroopLocation.X;
+
+            if (isTryingToMoveForward)
+            {
+                if(i_PlayerThatMakesTheMoveSign == PlayerSign.first)
+                {
+                    currentRowIndex = (r_RowsNumbersForADoubleMove.Contains(i_CurrentTroopLocation.X)) ? currentRowIndex - 1 : currentRowIndex ;
+                    isTryingToMoveForward &= currentRowIndex == i_NextTroopLocation.X || currentRowIndex - 1 == i_NextTroopLocation.X;
+                }
+                else if(i_PlayerThatMakesTheMoveSign == PlayerSign.second)
+                {
+                    currentRowIndex = (r_RowsNumbersForADoubleMove.Contains(i_CurrentTroopLocation.X)) ? currentRowIndex + 1: currentRowIndex ;
+                    isTryingToMoveForward &= currentRowIndex == i_NextTroopLocation.X || currentRowIndex +1 == i_NextTroopLocation.X;
+                }
+            }
+
+            return isTryingToMoveForward;
+        }
+
+        internal bool IsNextLocationIsDiagonalToCurrentLocation(BoardCell i_CurrentLocation, BoardCell i_CandidatePoint)
+        {
+            PlayerSign currentCellSign = getPlayerSignFromBoardCell(i_CurrentLocation);
+            PlayerSign candidateCellSign = getPlayerSignFromBoardCell(i_CandidatePoint);
+            int horizontalDistance = (int)Math.Abs(i_CurrentLocation.X - i_CandidatePoint.X);
+            int verticalDistance = (int)Math.Abs(i_CurrentLocation.Y - i_CandidatePoint.Y);
+            bool isCellsTypeAreDifferent = currentCellSign != candidateCellSign && 
+                currentCellSign != PlayerSign.empty && candidateCellSign != PlayerSign.empty;
+
+            return (horizontalDistance == 1 && verticalDistance == 1 && isCellsTypeAreDifferent);
         }
 
         private bool makeTheMove(Player i_PlayerThatMakesAMove, BoardCell i_CurrentTroopLocation, BoardCell i_NextTroopLocation)
         {
             bool isPossibleToMakeAMove = false;
-            
-            r_Board[(int)i_CurrentTroopLocation.X, (int)i_CurrentTroopLocation.Y] = GameUtilities.ePlayerSign.empty;
-            r_Board[(int)i_NextTroopLocation.X, (int)i_NextTroopLocation.Y] = i_PlayerThatMakesAMove.PlayerSign;
-            isPossibleToMakeAMove = true;
+
+            try
+            {
+                r_Board[(int)i_CurrentTroopLocation.X, (int)i_CurrentTroopLocation.Y] = PlayerSign.empty;
+                r_Board[(int)i_NextTroopLocation.X, (int)i_NextTroopLocation.Y] = i_PlayerThatMakesAMove.PlayerSign;
+                isPossibleToMakeAMove = true;
+            }
+            catch (Exception)
+            {
+                isPossibleToMakeAMove = false;
+            }
 
             return isPossibleToMakeAMove;
         }
+
         private bool makeMoveAndUpdatesPlayers(Player i_PlayerThatMakesAMove, Player i_SecondPlayer, BoardCell i_CurrentTroopLocation, BoardCell i_NextTroopLocation)
         {
-            bool isPossibleToMakeAMove = false;
             int rowIndex = (int)i_CurrentTroopLocation.X;
             int colIndex = (int)i_CurrentTroopLocation.Y;
-
-            if(i_PlayerThatMakesAMove.PlayerType == GameUtilities.ePlayersType.Computer)
-            {
-                i_NextTroopLocation = GenerateRandomMove(i_PlayerThatMakesAMove);
-            }
 
             if (r_Board[rowIndex, colIndex] == i_SecondPlayer.PlayerSign)
             {
                 i_SecondPlayer.NumberOfTroopsRemaining--;
             }
 
-            isPossibleToMakeAMove = makeTheMove(i_PlayerThatMakesAMove,i_CurrentTroopLocation, i_NextTroopLocation);
-/*
-            r_Board[rowIndex, colIndex] = GameUtilities.ePlayerSign.empty;
-            r_Board[(int)i_NextTroopLocation.X, (int)i_NextTroopLocation.Y] = i_PlayerThatMakesAMove.PlayerSign;
-            isPossibleToMakeAMove = true;*/
-
-            return isPossibleToMakeAMove;
+            return makeTheMove(i_PlayerThatMakesAMove, i_CurrentTroopLocation, i_NextTroopLocation);
         }
 
-        private bool isIndicesWithinRange(int i_RowIndex, int i_ColIndex)
+        internal bool IsIndicesWithinRange(int i_RowIndex, int i_ColIndex)
         {
             bool isRowOk = i_RowIndex < BoardSize && i_RowIndex >= 0;
             bool isColOk = i_ColIndex < BoardSize && i_ColIndex >= 0;
@@ -130,11 +162,11 @@ namespace ChceckersLogicComponents
             return isRowOk && isColOk;
         }
 
-        private bool isSlotEmpty(Player i_CurrentPlayer,BoardCell i_CandidatePoint)
+        internal bool IsSlotEmpty(Player i_CurrentPlayer,BoardCell i_CandidatePoint)
         {
             bool isSlotEmpty = false;
 
-            if(isIndicesWithinRange((int)i_CandidatePoint.X, (int)i_CandidatePoint.Y))
+            if(IsIndicesWithinRange((int)i_CandidatePoint.X, (int)i_CandidatePoint.Y))
             {
                 isSlotEmpty = r_Board[(int)i_CandidatePoint.X, (int)i_CandidatePoint.Y] != i_CurrentPlayer.PlayerSign;
             }
@@ -144,82 +176,6 @@ namespace ChceckersLogicComponents
             }
 
             return isSlotEmpty;
-        }
-
-        private bool isNextLocationIsDiagonalToCurrentLocation(BoardCell i_CurrentLocation, BoardCell i_CandidatePoint)
-        {
-            int horizontalDistance = (int)Math.Abs(i_CurrentLocation.X - i_CandidatePoint.X);
-            int verticalDistance = (int)Math.Abs(i_CurrentLocation.Y - i_CandidatePoint.Y);
-
-            return (horizontalDistance == 1 && verticalDistance == 1);
-        }
-
-        public BoardCell GenerateRandomMove(Player i_ComputerPlayer)
-        {
-            List<BoardCell> potenailsCandidates = getAllLocationOfPlayerTroops(i_ComputerPlayer);
-            Random randomIndexGenerator = new Random();
-            bool isRandomPointFound = false;
-            BoardCell randomPoint = new BoardCell(0,0);
-            int randomIndex;
-
-            while (!isRandomPointFound)
-            {
-                randomIndex = randomIndexGenerator.Next(0,potenailsCandidates.Count);
-                randomPoint = genrateRandomPointGivenAPoint(potenailsCandidates[randomIndex], i_ComputerPlayer);
-
-                if(randomPoint != potenailsCandidates[randomIndex])
-                {
-                    isRandomPointFound = true;
-                }
-            }
-
-            return randomPoint;
-        }
-
-        private List<BoardCell> getAllLocationOfPlayerTroops(Player i_ComputerPlayer)
-        {
-            List<BoardCell> potenailsCandidates = new List<BoardCell>();
-
-            for (int i = 0; i < BoardSize; i++)
-            {
-                for (int j = 0; j < BoardSize; j++)
-                {
-                    if (r_Board[i, j] == i_ComputerPlayer.PlayerSign)
-                    {
-                        potenailsCandidates.Add(new BoardCell(i, j));
-                    }
-                }
-            }
-
-            return potenailsCandidates;
-        }
-
-        private BoardCell genrateRandomPointGivenAPoint(BoardCell i_currentPoint, Player i_ComputerPlayer)
-        {
-            BoardCell returningPoint = i_currentPoint;
-            double xAxis = 0;
-            double yAxis = 0;
-
-            foreach(BoardCell DiagonalDiretionPoint in r_PossibleComputerDirections.Values)
-            {
-                try
-                {
-                    yAxis = DiagonalDiretionPoint.Y + i_currentPoint.Y;
-                    xAxis = DiagonalDiretionPoint.X + i_currentPoint.X;
-                    returningPoint = new BoardCell((int)xAxis, (int)yAxis);
-
-                    if(isSlotEmpty(i_ComputerPlayer, returningPoint))
-                    {
-                        break;
-                    }
-                }
-                catch(Exception)
-                {
-                    returningPoint = i_currentPoint; 
-                }
-            }
-
-            return returningPoint;
         }
     }
 }

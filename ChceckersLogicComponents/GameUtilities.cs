@@ -37,11 +37,11 @@ namespace ChceckersLogicComponents
 
         public static ePlayersType GetPlayersType(bool i_PlayerType)
         {
-            ePlayersType playerTypeConverted = ePlayersType.Computer;
+            ePlayersType playerTypeConverted = ePlayersType.Human;
 
             if(i_PlayerType == false)
             {
-                playerTypeConverted = ePlayersType.Human;
+                playerTypeConverted = ePlayersType.Computer;
             }
 
             return playerTypeConverted;

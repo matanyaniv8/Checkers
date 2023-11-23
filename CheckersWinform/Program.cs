@@ -1,10 +1,7 @@
 ﻿using ChceckersLogicComponents;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net.NetworkInformation;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace CheckersWinform
 {
@@ -12,38 +9,49 @@ namespace CheckersWinform
     {
         public static void Main(string[] args)
         {
-            CheckersGameLogic board = new CheckersGameLogic("Matan");
+            CheckersGameLogic board = new CheckersGameLogic("Matan","Computer" ,false);
             run(board);
-            /*printBoard(board);
-            board.MakeAMove(new BoardCell(5,0), new BoardCell(4,0));
-            Console.WriteLine();
-            printBoard(board);*/
-
         }
 
         private static void run(CheckersGameLogic i_GameBoard)
         {
             BoardCell[] indices = null;
-            Player lastPlayer = null;
+            Player lastPlayer = i_GameBoard.CurrentPlayerTurn;
+            bool isThereAWin = false;
+            printBoard(i_GameBoard);
 
-            while (!i_GameBoard.IsThereAWin())
+            while (!isThereAWin)
             {
+                isThereAWin = i_GameBoard.IsThereAWin();
+                lastPlayer = i_GameBoard.CurrentPlayerTurn;
+
+                if (lastPlayer.PlayerType == GameUtilities.ePlayersType.Computer)
+                {
+                    try
+                    {
+                        i_GameBoard.MakeRandomMove();
+                        Console.WriteLine("Computer Move:");
+                    }
+                    catch (Exception e)
+                    {
+                        continue;
+                    }
+                }
+
+                else
+                {
+                    try
+                    {
+                        indices = askUserForAMove(i_GameBoard);
+                        lastPlayer = i_GameBoard.MakeAMove(indices[0], indices[1]);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
+                }
+
                 printBoard(i_GameBoard);
-                /*if (i_GameBoard.CurrentPlayerTurn.PlayerType = GameUtilities.ePlayersType.Computer)
-                {
-                    i_GameBoard.MakeAMove();
-                }*/
-                try
-                {
-                    indices = askUserForAMove();
-                    Console.WriteLine(i_GameBoard.CheckersBoard.GameBoard[5, 0]);
-                    lastPlayer = i_GameBoard.MakeAMove(indices[0], indices[1]);
-                    Console.WriteLine(i_GameBoard.CheckersBoard.GameBoard[5, 0]);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e.Message);
-                }
             }
 
             Console.WriteLine($"The Winner is {lastPlayer.Name}");
@@ -105,7 +113,7 @@ namespace CheckersWinform
             return boardLine.ToString();
         }
 
-        private static BoardCell[] askUserForAMove()
+        private static BoardCell[] askUserForAMove(CheckersGameLogic i_CheckersGame)
         {
             string userTroopAnswer = null;
             string userMoveLocation = null;
@@ -115,11 +123,11 @@ namespace CheckersWinform
             Console.WriteLine("Please choose a legit location");
             userMoveLocation =  Console.ReadLine();
             
-            return new BoardCell[] {getUserLocation(userTroopAnswer), getUserLocation(userMoveLocation)};
+            return new BoardCell[] {getUserLocation(i_CheckersGame, userTroopAnswer), getUserLocation(i_CheckersGame, userMoveLocation)};
         }
 
 
-        private static BoardCell getUserLocation(string i_UserChoiseAsString, char i_AnswerDividerSign = ',')
+        private static BoardCell getUserLocation(CheckersGameLogic i_CheckersGame,string i_UserChoiseAsString, char i_AnswerDividerSign = ',')
         {
             List<int> userChoiceAsInt = new List<int>();
 
@@ -135,7 +143,7 @@ namespace CheckersWinform
                 }
             }
 
-            return new BoardCell(userChoiceAsInt);
+            return new BoardCell(userChoiceAsInt, i_CheckersGame.CheckersBoard.GameBoard[userChoiceAsInt[0], userChoiceAsInt[1]]);
         }
     }
 }

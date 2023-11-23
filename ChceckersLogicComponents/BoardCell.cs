@@ -64,5 +64,10 @@ namespace ChceckersLogicComponents
         {
             return X.GetHashCode() ^ Y.GetHashCode() ^ PlayerSign.GetHashCode();
         }
+
+        public override string ToString()
+        {
+            return ($"X: {this.X}, Y: {this.Y}, Sign: {this.PlayerSign}");
+        }
     }
 }

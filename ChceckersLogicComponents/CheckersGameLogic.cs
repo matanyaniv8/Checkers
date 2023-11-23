@@ -1,33 +1,35 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
 
 namespace ChceckersLogicComponents
 {
     public class CheckersGameLogic
     {
-        private readonly BoardCell r_DefualtPoint = new BoardCell().DefualtCell;
+        private RandomMoveGenerator r_RandomMoveGenerator = null;
         private const int k_NumberOfTroops = 12;
         private const int k_NumberOfRowsToPutTroopsInBoard = 3;
+        private const string k_NotCorrectPlayerHasChosenMessage = "please choose a soldier from your troops";
         public Player FirstPlayer { get; private set; }
         public Player SecondPlayer { get; private set;}
         public Board CheckersBoard { get; private set; }
         public Player CurrentPlayerTurn { get; private set; }
         public Player OpponentPlayer { get; private set; }
 
-        public CheckersGameLogic(string i_FirstPlayerName, string i_SecondPlayerName="Computer", bool i_IsSecondPlayerComputer=true)
+        public CheckersGameLogic(string i_FirstPlayerName, string i_SecondPlayerName="Computer", bool i_IsSecondPlayerHuman=false)
         {
-            CheckersBoard = new Board(i_IsSecondPlayerComputer);
+            CheckersBoard = new Board(i_IsSecondPlayerHuman);
             FirstPlayer = new Player(i_FirstPlayerName,1 ,true, k_NumberOfTroops);
             FirstPlayer.PlayerSign = GameUtilities.ePlayerSign.first;
-            SecondPlayer = new Player(i_SecondPlayerName, 2, i_IsSecondPlayerComputer, k_NumberOfTroops);
+            SecondPlayer = new Player(i_SecondPlayerName, 2, i_IsSecondPlayerHuman, k_NumberOfTroops);
             SecondPlayer.PlayerSign = GameUtilities.ePlayerSign.second;
             CurrentPlayerTurn = FirstPlayer;
             OpponentPlayer = SecondPlayer;
             initializeBoard();
+
+            if(!i_IsSecondPlayerHuman)
+            {
+                r_RandomMoveGenerator = new RandomMoveGenerator(SecondPlayer, CheckersBoard);
+            }
         }
 
         private void initializeBoard()
@@ -56,7 +58,14 @@ namespace ChceckersLogicComponents
 
             if (!IsThereAWin())
             {
-                CheckersBoard.MakeAMove(CurrentPlayerTurn, OpponentPlayer, i_CurrentPlayerTroopLocation, i_SelectedLocationOnBoard);   
+                if (CurrentPlayerTurn.PlayerSign == i_CurrentPlayerTroopLocation.PlayerSign)
+                {
+                    CheckersBoard.MakeAMove(CurrentPlayerTurn, OpponentPlayer, i_CurrentPlayerTroopLocation, i_SelectedLocationOnBoard);
+                }
+                else
+                {
+                    throw new Exception(k_NotCorrectPlayerHasChosenMessage + $" - {CurrentPlayerTurn.Name}");
+                }
             }
 
             CurrentPlayerTurn = OpponentPlayer;
@@ -67,8 +76,13 @@ namespace ChceckersLogicComponents
 
         public void MakeRandomMove()
         {
-            ///TODO: TO complete using machine learning 
-            ///like a tree of all possible moves 
+            KeyValuePair<BoardCell, BoardCell> currentAndTargetCells = r_RandomMoveGenerator.GenerateRandomMove();
+
+            if(SecondPlayer.PlayerType == GameUtilities.ePlayersType.Computer 
+                && currentAndTargetCells.Key != currentAndTargetCells.Value)
+            {
+                MakeAMove(currentAndTargetCells.Key, currentAndTargetCells.Value);
+            }
         }
 
         public bool IsThereAWin()

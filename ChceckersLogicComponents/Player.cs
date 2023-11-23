@@ -8,7 +8,8 @@ using System.Windows;
 namespace ChceckersLogicComponents
 {
     public class Player
-    {   public string Name {  get; private set; }
+    {   
+        public string Name {  get; private set; }
         public GameUtilities.ePlayerSign PlayerSign { get; set; }
         public GameUtilities.ePlayersType PlayerType { get; private set; } 
         public int NumberOfTroopsRemaining { get; set; }
