@@ -1,9 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using PlayerSign = ChceckersLogicComponents.GameUtilities.ePlayerSign;
 
 namespace ChceckersLogicComponents
 {
+    /// <summary>
+    /// This Class is a wrapper for random move generator given a Checkers Board.
+    /// It collects all the Player's troops and generates all the possible moves 
+    /// Like forward, backwards, Diagonal if the players eats an opponent troop.
+    /// </summary>
+    
     internal enum eDirection
     {
         Down = -1,
@@ -21,15 +28,16 @@ namespace ChceckersLogicComponents
         
         private Dictionary<string, BoardCell> r_PossibleComputerEatDirections = new Dictionary<string, BoardCell>
         {
-                { "UpLeft", new BoardCell((int)eDirection.Up, (int)eDirection.Left) },
-                {"UpRight", new BoardCell((int)eDirection.Up, (int)eDirection.Right) },
+                { "UpLeft", new BoardCell((int)eDirection.Up, (int)eDirection.Left, null, PlayerSign.second) },
+                {"UpRight", new BoardCell((int)eDirection.Up, (int)eDirection.Right, null, PlayerSign.second) },
         };
 
         private Dictionary<string, BoardCell> r_PossibleMoveDirections = new Dictionary<string, BoardCell>
         {
-            {"Forward", new BoardCell((int)eDirection.Up, 0)},
-            {"Backward", new BoardCell((int)eDirection.Down, 0)},
-            {"DoubleForward", new BoardCell((int)eDirection.StartRowUp, 0)}
+            {"Forward", new BoardCell((int)eDirection.Up, 0, null, PlayerSign.second)},
+            {"Backward", new BoardCell((int)eDirection.Down, 0, null, PlayerSign.second)},
+            {"DoubleForward", new BoardCell((int)eDirection.StartRowUp, 0, null, PlayerSign.second)},
+            {"DoubleBackward", new BoardCell((int)eDirection.Down, 0, null , PlayerSign.second) }
         };
 
         internal RandomMoveGenerator(Player i_ComputerPlayer, Board i_GameBoard)
@@ -40,9 +48,9 @@ namespace ChceckersLogicComponents
         
         internal KeyValuePair<BoardCell, BoardCell> GenerateRandomMove()
         {
-            List<BoardCell> potenailsCandidates = getAllLocationOfPlayerTroops(ComputerPlayer);
+            List<BoardCell> potenailsCandidates = getAllLocationOfPlayerTroops();
             bool isRandomPointFound = false;
-            BoardCell randomStartPoint = new BoardCell(0, 0, ComputerPlayer.PlayerSign);
+            BoardCell randomStartPoint = new BoardCell(0, 0,null, ComputerPlayer.PlayerSign);
             BoardCell randomTargetPoint = randomStartPoint;
             int randomIndex;
 
@@ -50,11 +58,11 @@ namespace ChceckersLogicComponents
             {
                 randomIndex = r_RandomIndexGenerator.Next(0, potenailsCandidates.Count);
                 randomStartPoint = potenailsCandidates[randomIndex];
-                randomTargetPoint = genrateRandomPointGivenAPoint(randomStartPoint, ComputerPlayer);
+                randomTargetPoint = genrateRandomPointGivenAPoint(randomStartPoint);
 
                 if (randomStartPoint != randomTargetPoint)
                 {
-                    randomStartPoint.PlayerSign = ComputerPlayer.PlayerSign;
+                    randomStartPoint.CheckersReleventInfo = new CheckersBoardCell(ComputerPlayer.PlayerSign);
                     isRandomPointFound = true;
                 }
             }
@@ -62,7 +70,7 @@ namespace ChceckersLogicComponents
             return new KeyValuePair<BoardCell, BoardCell>(randomStartPoint, randomTargetPoint);
         }
 
-        private List<BoardCell> getAllLocationOfPlayerTroops(Player i_ComputerPlayer)
+        private List<BoardCell> getAllLocationOfPlayerTroops()
         {
             List<BoardCell> potenailsCandidates = new List<BoardCell>();
             int boardSize =r_CheckersBoard.BoardSize;
@@ -71,9 +79,9 @@ namespace ChceckersLogicComponents
             {
                 for (int j = 0; j < boardSize; j++)
                 {
-                    if (r_CheckersBoard.GameBoard[i, j] == i_ComputerPlayer.PlayerSign)
+                    if (r_CheckersBoard.GameBoard[i, j].CellSign == ComputerPlayer.PlayerSign)
                     {
-                        potenailsCandidates.Add(new BoardCell(i, j, GameUtilities.ePlayerSign.second));
+                        potenailsCandidates.Add(new BoardCell(i, j, null, ComputerPlayer.PlayerSign));
                     }
                 }
             }
@@ -81,13 +89,13 @@ namespace ChceckersLogicComponents
             return potenailsCandidates;
         }
 
-        private BoardCell genrateRandomPointGivenAPoint(BoardCell i_currentPoint, Player i_ComputerPlayer)
+        private BoardCell genrateRandomPointGivenAPoint(BoardCell i_currentPoint)
         {
-            List<BoardCell> possibleMoves = getPossibleEatMoves(i_currentPoint, i_ComputerPlayer);
+            List<BoardCell> possibleMoves = getPossibleEatMoves(i_currentPoint);
             int randomIndex = 0;
             BoardCell returningPoint = i_currentPoint;
 
-            possibleMoves = possibleMoves.Concat(getPossibleMovingMoves(i_currentPoint, i_ComputerPlayer)).ToList();
+            possibleMoves = possibleMoves.Concat(getPossibleMovingMoves(i_currentPoint)).ToList();
             
             if(possibleMoves.Count != 0)
             {
@@ -95,28 +103,28 @@ namespace ChceckersLogicComponents
                 returningPoint = possibleMoves[randomIndex];
             }
 
-            returningPoint.PlayerSign = i_ComputerPlayer.PlayerSign;
+            returningPoint = new BoardCell(returningPoint.X, returningPoint.Y, returningPoint.CheckersReleventInfo, ComputerPlayer.PlayerSign);
 
             return returningPoint;
         }
 
-        private List<BoardCell> getPossibleEatMoves(BoardCell i_currentPoint, Player i_ComputerPlayer)
+        private List<BoardCell> getPossibleEatMoves(BoardCell i_currentPoint)
         {
             List<BoardCell> possibleMoves = new List<BoardCell>();
-            BoardCell returningPoint = i_currentPoint;
-            double xAxis = 0;
-            double yAxis = 0;
+            BoardCell returningPoint;
+            int xAxis = 0;
+            int yAxis = 0;
 
             foreach (BoardCell DiagonalDiretionPoint in r_PossibleComputerEatDirections.Values)
             {
                 try
                 {
-                    yAxis = DiagonalDiretionPoint.Y + i_currentPoint.Y;
-                    xAxis = DiagonalDiretionPoint.X + i_currentPoint.X;
-                    returningPoint = new BoardCell((int)xAxis, (int)yAxis);
+                    yAxis = (int)(DiagonalDiretionPoint.Y + i_currentPoint.Y);
+                    xAxis = (int)(DiagonalDiretionPoint.X + i_currentPoint.X);
+                    returningPoint = new BoardCell(xAxis, yAxis, null, ComputerPlayer.PlayerSign);
 
-                    if (r_CheckersBoard.IsSlotEmpty(i_ComputerPlayer, returningPoint) &&
-                         r_CheckersBoard.GameBoard[(int)xAxis, (int)yAxis] != GameUtilities.ePlayerSign.empty)
+                    if (r_CheckersBoard.IsSlotEmpty(ComputerPlayer, returningPoint) &&
+                         r_CheckersBoard.GameBoard[xAxis, yAxis].CellSign != PlayerSign.empty)
                     {
                         possibleMoves.Add(returningPoint);
                     }
@@ -130,25 +138,24 @@ namespace ChceckersLogicComponents
             return possibleMoves;
         }
 
-        private List<BoardCell> getPossibleMovingMoves(BoardCell i_currentPoint, Player i_ComputerPlayer)
+        private List<BoardCell> getPossibleMovingMoves(BoardCell i_currentPoint)
         {
             List<BoardCell> possibleMoves = new List<BoardCell>();
             BoardCell returningPoint = i_currentPoint;
-            GameUtilities.ePlayerSign currentCellSign = GameUtilities.ePlayerSign.empty;
-            double xAxis;
-            double yAxis;
+            PlayerSign currentCellSign = PlayerSign.empty;
+            int xAxis = 0;
+            int yAxis = 0;
 
             foreach (BoardCell DiagonalDiretionPoint in r_PossibleMoveDirections.Values)
             {
                 try
                 {
-                    yAxis = DiagonalDiretionPoint.Y + i_currentPoint.Y;
-                    xAxis = DiagonalDiretionPoint.X + i_currentPoint.X;
-                    returningPoint = new BoardCell((int)xAxis, (int)yAxis);
-                    currentCellSign = r_CheckersBoard.GameBoard[(int)xAxis, (int)yAxis];
-                    bool checkIsEmpty = r_CheckersBoard.IsSlotEmpty(i_ComputerPlayer, returningPoint);
-                    if (checkIsEmpty == true && 
-                        currentCellSign == GameUtilities.ePlayerSign.empty)
+                    yAxis = (int)(DiagonalDiretionPoint.Y + i_currentPoint.Y);
+                    xAxis = (int)(DiagonalDiretionPoint.X + i_currentPoint.X);
+                    returningPoint = new BoardCell(xAxis, yAxis, null, ComputerPlayer.PlayerSign);
+                    currentCellSign = r_CheckersBoard.GameBoard[xAxis, yAxis].CellSign;
+
+                    if (r_CheckersBoard.IsSlotEmpty(ComputerPlayer, returningPoint) && currentCellSign == PlayerSign.empty)
                     {
                         possibleMoves.Add(returningPoint);
                     }

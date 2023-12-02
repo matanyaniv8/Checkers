@@ -3,6 +3,11 @@ using System.Collections.Generic;
 
 namespace ChceckersLogicComponents
 {
+    /// <summary>
+    /// This Class is the facade of all the Checkers Game components.
+    /// It Hides all the actual doers, so that the users won't knows how the game logic is built.
+    /// </summary>
+    
     public class CheckersGameLogic
     {
         private RandomMoveGenerator r_RandomMoveGenerator = null;
@@ -39,7 +44,7 @@ namespace ChceckersLogicComponents
 
             if (!IsThereAWin())
             {
-                if (CurrentPlayerTurn.PlayerSign == i_CurrentPlayerTroopLocation.PlayerSign)
+                if (CurrentPlayerTurn.PlayerSign == i_CurrentPlayerTroopLocation.CheckersReleventInfo.CellSign)
                 {
                     CheckersBoard.MakeAMove(CurrentPlayerTurn, OpponentPlayer, i_CurrentPlayerTroopLocation, i_SelectedLocationOnBoard);
                 }
@@ -66,10 +71,7 @@ namespace ChceckersLogicComponents
             }
         }
 
-        public GameUtilities.ePlayerSign GetCellValue(int i_RowIndex, int i_ColIndex)
-        {
-           return CheckersBoard.GetPlayerSignFromBoardCell(new BoardCell(i_RowIndex, i_ColIndex));
-        }
+        public CheckersBoardCell GetCellValue(int i_RowIndex, int i_ColIndex) => CheckersBoard.GetPlayerCellFromBoard(new BoardCell(i_RowIndex, i_ColIndex));
 
         public bool IsThereAWin()
         {

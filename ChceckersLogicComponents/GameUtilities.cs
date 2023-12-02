@@ -1,11 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ChceckersLogicComponents
 {
+    /// <summary>
+    /// This Class is a static class for utilities,
+    /// It has some static functions for the whole logic components.
+    /// </summary>
+    
     public static class GameUtilities
     {
         private const string k_NotValidEnumType = "Not Acceptable Value Inserted!";

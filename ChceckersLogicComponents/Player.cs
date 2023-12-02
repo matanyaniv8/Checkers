@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-
+﻿
 namespace ChceckersLogicComponents
 {
+    /// <summary>
+    /// This Class Repesents a Player and Hold Some properties like player's name, number of troops etc.
+    /// </summary>
     public class Player
     {   
         public string Name {  get; private set; }

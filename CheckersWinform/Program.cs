@@ -1,6 +1,7 @@
 ﻿using ChceckersLogicComponents;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace CheckersWinform
@@ -9,8 +10,8 @@ namespace CheckersWinform
     {
         public static void Main(string[] args)
         {
-            CheckersGameLogic board = new CheckersGameLogic("Matan","Computer" ,false);
-            run(board);
+            CheckersGameLogic gameItSelf = new CheckersGameLogic("Matan", "Computer", false);
+            run(gameItSelf);
         }
 
         private static void run(CheckersGameLogic i_GameBoard)
@@ -91,7 +92,7 @@ namespace CheckersWinform
         private static string getLineFromBoard(CheckersGameLogic i_GameBoardToPrint, int i_LineNumber) 
         {
             StringBuilder boardLine = new StringBuilder();
-            GameUtilities.ePlayerSign currentSlotValue = GameUtilities.ePlayerSign.empty;
+            CheckersBoardCell currentSlotValue = new CheckersBoardCell();
             string defualtSlotSign = "   |";
             string slotSignToPrint = defualtSlotSign;
 
@@ -102,9 +103,9 @@ namespace CheckersWinform
                 slotSignToPrint = defualtSlotSign;
                 currentSlotValue = i_GameBoardToPrint.GetCellValue(i_LineNumber, i);
 
-                if(currentSlotValue != GameUtilities.ePlayerSign.empty)
+                if(currentSlotValue.CellSign != GameUtilities.ePlayerSign.empty)
                 {
-                    slotSignToPrint = (currentSlotValue == GameUtilities.ePlayerSign.first) ? "X  |" : "O  |";
+                    slotSignToPrint = (currentSlotValue.CellSign == GameUtilities.ePlayerSign.first) ? "X  |" : "O  |";
                 }
 
                 boardLine.Append(slotSignToPrint);
