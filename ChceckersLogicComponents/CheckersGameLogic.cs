@@ -68,6 +68,8 @@ namespace ChceckersLogicComponents
                 && currentAndTargetCells.Key != currentAndTargetCells.Value)
             {
                 MakeAMove(currentAndTargetCells.Key, currentAndTargetCells.Value);
+                Console.WriteLine(currentAndTargetCells.Key.ToString());
+                Console.WriteLine(currentAndTargetCells.Value.ToString());
             }
         }
 

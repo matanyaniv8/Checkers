@@ -45,6 +45,7 @@
     <Compile Include="CheckersBoardCell.cs" />
     <Compile Include="CheckersGameLogic.cs" />
     <Compile Include="GameUtilities.cs" />
+    <Compile Include="MovesManager.cs" />
     <Compile Include="Player.cs" />
     <Compile Include="RandomMoveGenerator.cs" />
   </ItemGroup>

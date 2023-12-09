@@ -20,24 +20,33 @@ namespace ChceckersLogicComponents
         Right = 1,
     }
 
+    internal enum eRandomMoveDecision
+    {
+        Eat = 0,
+        NoEat = 1
+    }
+
     internal class RandomMoveGenerator
     {
-        private readonly Board r_CheckersBoard;
+        private const int k_DecisionTreshold = 5;
+        private const int k_MaxTreshold = 10;
+        private readonly Board r_CheckersBoard = null;
         private readonly Random r_RandomIndexGenerator = new Random();
+
         internal Player ComputerPlayer {  get; private set; }
         
         private Dictionary<string, BoardCell> r_PossibleComputerEatDirections = new Dictionary<string, BoardCell>
         {
-                { "UpLeft", new BoardCell((int)eDirection.Up, (int)eDirection.Left, null, PlayerSign.second) },
-                {"UpRight", new BoardCell((int)eDirection.Up, (int)eDirection.Right, null, PlayerSign.second) },
+                { "UpLeft", new BoardCell((int)eDirection.Up +1, (int)eDirection.Left -1, null, PlayerSign.second) },
+                {"UpRight", new BoardCell((int)eDirection.Up + 1, (int)eDirection.Right +1, null, PlayerSign.second) },
         };
 
         private Dictionary<string, BoardCell> r_PossibleMoveDirections = new Dictionary<string, BoardCell>
         {
-            {"Forward", new BoardCell((int)eDirection.Up, 0, null, PlayerSign.second)},
-            {"Backward", new BoardCell((int)eDirection.Down, 0, null, PlayerSign.second)},
-            {"DoubleForward", new BoardCell((int)eDirection.StartRowUp, 0, null, PlayerSign.second)},
-            {"DoubleBackward", new BoardCell((int)eDirection.Down, 0, null , PlayerSign.second) }
+            {"Forward", new BoardCell((int)eDirection.Up, (int)eDirection.Left, null, PlayerSign.second)},
+            {"Backward", new BoardCell((int)eDirection.Down, (int)eDirection.Right, null, PlayerSign.second)},
+            /*{"DoubleForward", new BoardCell((int)eDirection.StartRowUp, 0, null, PlayerSign.second)},
+            {"DoubleBackward", new BoardCell((int)eDirection.Down, 0, null , PlayerSign.second) }*/
         };
 
         internal RandomMoveGenerator(Player i_ComputerPlayer, Board i_GameBoard)
@@ -62,7 +71,6 @@ namespace ChceckersLogicComponents
 
                 if (randomStartPoint != randomTargetPoint)
                 {
-                    randomStartPoint.CheckersReleventInfo = new CheckersBoardCell(ComputerPlayer.PlayerSign);
                     isRandomPointFound = true;
                 }
             }
@@ -74,6 +82,7 @@ namespace ChceckersLogicComponents
         {
             List<BoardCell> potenailsCandidates = new List<BoardCell>();
             int boardSize =r_CheckersBoard.BoardSize;
+            BoardCell troopLocation;
 
             for (int i = 0; i < boardSize; i++)
             {
@@ -81,7 +90,9 @@ namespace ChceckersLogicComponents
                 {
                     if (r_CheckersBoard.GameBoard[i, j].CellSign == ComputerPlayer.PlayerSign)
                     {
-                        potenailsCandidates.Add(new BoardCell(i, j, null, ComputerPlayer.PlayerSign));
+                        troopLocation = new BoardCell(i, j);
+                        troopLocation.CheckersReleventInfo = r_CheckersBoard.GetPlayerCellFromBoard(troopLocation);
+                        potenailsCandidates.Add(troopLocation);
                     }
                 }
             }
@@ -103,8 +114,6 @@ namespace ChceckersLogicComponents
                 returningPoint = possibleMoves[randomIndex];
             }
 
-            returningPoint = new BoardCell(returningPoint.X, returningPoint.Y, returningPoint.CheckersReleventInfo, ComputerPlayer.PlayerSign);
-
             return returningPoint;
         }
 
@@ -114,17 +123,17 @@ namespace ChceckersLogicComponents
             BoardCell returningPoint;
             int xAxis = 0;
             int yAxis = 0;
-
+            
             foreach (BoardCell DiagonalDiretionPoint in r_PossibleComputerEatDirections.Values)
             {
                 try
                 {
-                    yAxis = (int)(DiagonalDiretionPoint.Y + i_currentPoint.Y);
-                    xAxis = (int)(DiagonalDiretionPoint.X + i_currentPoint.X);
+                    yAxis = DiagonalDiretionPoint.Y + i_currentPoint.Y;
+                    xAxis = DiagonalDiretionPoint.X + i_currentPoint.X;
                     returningPoint = new BoardCell(xAxis, yAxis, null, ComputerPlayer.PlayerSign);
+                    returningPoint.CheckersReleventInfo = r_CheckersBoard.GetPlayerCellFromBoard (returningPoint);
 
-                    if (r_CheckersBoard.IsSlotEmpty(ComputerPlayer, returningPoint) &&
-                         r_CheckersBoard.GameBoard[xAxis, yAxis].CellSign != PlayerSign.empty)
+                    if(r_CheckersBoard.MovesManager.IsPlayerMoveAnEatMove(ComputerPlayer, i_currentPoint, returningPoint))
                     {
                         possibleMoves.Add(returningPoint);
                     }
@@ -142,7 +151,6 @@ namespace ChceckersLogicComponents
         {
             List<BoardCell> possibleMoves = new List<BoardCell>();
             BoardCell returningPoint = i_currentPoint;
-            PlayerSign currentCellSign = PlayerSign.empty;
             int xAxis = 0;
             int yAxis = 0;
 
@@ -150,12 +158,12 @@ namespace ChceckersLogicComponents
             {
                 try
                 {
-                    yAxis = (int)(DiagonalDiretionPoint.Y + i_currentPoint.Y);
-                    xAxis = (int)(DiagonalDiretionPoint.X + i_currentPoint.X);
-                    returningPoint = new BoardCell(xAxis, yAxis, null, ComputerPlayer.PlayerSign);
-                    currentCellSign = r_CheckersBoard.GameBoard[xAxis, yAxis].CellSign;
+                    yAxis = DiagonalDiretionPoint.Y + i_currentPoint.Y;
+                    xAxis = DiagonalDiretionPoint.X + i_currentPoint.X;
+                    returningPoint = new BoardCell(xAxis, yAxis);
+                    returningPoint.CheckersReleventInfo = r_CheckersBoard.GetPlayerCellFromBoard(returningPoint);
 
-                    if (r_CheckersBoard.IsSlotEmpty(ComputerPlayer, returningPoint) && currentCellSign == PlayerSign.empty)
+                    if(r_CheckersBoard.MovesManager.IsCurrentMoveIsMovingWithoutEating(ComputerPlayer, i_currentPoint, returningPoint))
                     {
                         possibleMoves.Add(returningPoint);
                     }

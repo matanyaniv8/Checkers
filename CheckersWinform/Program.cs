@@ -38,7 +38,6 @@ namespace CheckersWinform
                         continue;
                     }
                 }
-
                 else
                 {
                     try
