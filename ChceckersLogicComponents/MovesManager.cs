@@ -22,19 +22,33 @@ namespace ChceckersLogicComponents
         }
 
         // Checks if the Player's move is a right eat move.
-        private KeyValuePair<BoardCell, bool> isMoveIsRightEatMove(Player i_PlayerThatMakesTheMove, BoardCell i_CurrentCell, BoardCell i_PotenitialCandidateCell)
+        private KeyValuePair<BoardCell, bool> isMoveIsRightEatMove(Player i_PlayerThatMakesTheMove, BoardCell i_CurrentCell, BoardCell i_PotenitialCandidateCell, bool i_IsCurrentTroopAKingFlag=false)
         {
             BoardCell opponentLocation = i_CurrentCell;
 
-            if (r_GameBoard.IsIndicesWithinRange(i_PotenitialCandidateCell)) // DOTO: there's a double check here and in the isMoveCellReadyToBeEaten method.
+            if (r_GameBoard.IsIndicesWithinRange(i_PotenitialCandidateCell)) 
             {
-                if (i_PlayerThatMakesTheMove.PlayerSign == PlayerSign.first)
+                if (i_IsCurrentTroopAKingFlag == false)
                 {
-                    opponentLocation = new BoardCell(i_PotenitialCandidateCell.X + 1, i_PotenitialCandidateCell.Y - 1);
+                    if (i_PlayerThatMakesTheMove.PlayerSign == PlayerSign.first)
+                    {
+                        opponentLocation = new BoardCell(i_PotenitialCandidateCell.X + 1, i_PotenitialCandidateCell.Y - 1);
+                    }
+                    else
+                    {
+                        opponentLocation = new BoardCell(i_PotenitialCandidateCell.X - 1, i_PotenitialCandidateCell.Y - 1);
+                    }
                 }
                 else
                 {
-                    opponentLocation = new BoardCell(i_PotenitialCandidateCell.X - 1, i_PotenitialCandidateCell.Y - 1);
+                    if (i_PlayerThatMakesTheMove.PlayerSign == PlayerSign.first)
+                    {
+                        opponentLocation = new BoardCell(i_PotenitialCandidateCell.X - 1, i_PotenitialCandidateCell.Y - 1);
+                    }
+                    else
+                    {
+                        opponentLocation = new BoardCell(i_PotenitialCandidateCell.X + 1, i_PotenitialCandidateCell.Y - 1);
+                    }
                 }
             }
             else
@@ -46,19 +60,33 @@ namespace ChceckersLogicComponents
         }
 
         // Check if the Player's move is a left eat move.
-        private KeyValuePair<BoardCell, bool> isMoveIsLeftEatMove(Player i_PlayerThatMakesTheMove, BoardCell i_CurrentCell, BoardCell i_PotenitialCandidateCell)
+        private KeyValuePair<BoardCell, bool> isMoveIsLeftEatMove(Player i_PlayerThatMakesTheMove, BoardCell i_CurrentCell, BoardCell i_PotenitialCandidateCell, bool i_IsCurrentTroopAKingFlag=false)
         {
             BoardCell opponentLocation = i_CurrentCell;
 
             if (r_GameBoard.IsIndicesWithinRange(i_PotenitialCandidateCell))
             {
-                if (i_PlayerThatMakesTheMove.PlayerSign == PlayerSign.first)
+                if (i_IsCurrentTroopAKingFlag == false)
                 {
-                    opponentLocation = new BoardCell(i_PotenitialCandidateCell.X + 1, i_PotenitialCandidateCell.Y + 1);
+                    if (i_PlayerThatMakesTheMove.PlayerSign == PlayerSign.first)
+                    {
+                        opponentLocation = new BoardCell(i_PotenitialCandidateCell.X + 1, i_PotenitialCandidateCell.Y + 1);
+                    }
+                    else
+                    {
+                        opponentLocation = new BoardCell(i_PotenitialCandidateCell.X - 1, i_PotenitialCandidateCell.Y + 1);
+                    }
                 }
                 else
                 {
-                    opponentLocation = new BoardCell(i_PotenitialCandidateCell.X - 1, i_PotenitialCandidateCell.Y + 1);
+                    if (i_PlayerThatMakesTheMove.PlayerSign == PlayerSign.first)
+                    {
+                        opponentLocation = new BoardCell(i_PotenitialCandidateCell.X - 1, i_PotenitialCandidateCell.Y + 1);
+                    }
+                    else
+                    {
+                        opponentLocation = new BoardCell(i_PotenitialCandidateCell.X + 1, i_PotenitialCandidateCell.Y + 1);
+                    }
                 }
             }
             else
@@ -93,6 +121,28 @@ namespace ChceckersLogicComponents
                 moveDest = isEnemyCellOk(i_CurrentCell, moveDest.Key);
             }
 
+            if(moveDest.Value == false && IsCurrentTroopAKing(i_CurrentCell))
+            {
+                moveDest = getEnemyCellIfAvaiableOnAnEatMoveForAKingTroop(i_CurrenctPlayer, i_CurrentCell, i_CandidateCell);
+
+            }
+
+            return moveDest;
+        }
+
+        private KeyValuePair<BoardCell, bool > getEnemyCellIfAvaiableOnAnEatMoveForAKingTroop(Player i_CurrenctPlayer, BoardCell i_CurrentCell, BoardCell i_CandidateCell)
+        {
+            bool isCurrentCellHasAKing = IsCurrentTroopAKing(i_CurrentCell);
+            KeyValuePair<BoardCell, bool> moveDest = isMoveIsLeftEatMove(i_CurrenctPlayer, i_CurrentCell, i_CandidateCell, isCurrentCellHasAKing);
+            
+            moveDest = isEnemyCellOk(i_CurrentCell, moveDest.Key);
+            
+            if (moveDest.Value == false)
+            {
+                moveDest = isMoveIsRightEatMove(i_CurrenctPlayer, i_CurrentCell, i_CandidateCell, isCurrentCellHasAKing);
+                moveDest = isEnemyCellOk(i_CurrentCell, moveDest.Key);
+            }
+
             return moveDest;
         }
 
@@ -108,13 +158,13 @@ namespace ChceckersLogicComponents
 
                 if (destCellIfAvailable.Value == true)
                 {
-                    moveSucceeded = MakeEatMove(i_CurrenctPlayer.PlayerSign, i_CurrentCell, destCellIfAvailable.Key, i_CandidateCell);
+                    moveSucceeded = makeAnEatMove(i_CurrenctPlayer.PlayerSign, i_CurrentCell, destCellIfAvailable.Key, i_CandidateCell);
                     i_OpponentPlayer.NumberOfTroopsRemaining = (moveSucceeded) ? i_OpponentPlayer.NumberOfTroopsRemaining-- : i_OpponentPlayer.NumberOfTroopsRemaining; // Updates the opponent on eat succeeded.
                 }
             }
             else if (IsCurrentMoveIsMovingWithoutEating(i_CurrenctPlayer, i_CurrentCell, i_CandidateCell))
             {
-                moveSucceeded = makeNonEatingMove(i_CurrenctPlayer, i_OpponentPlayer, i_CurrentCell, i_CandidateCell);
+                moveSucceeded = makeANonEatingMove(i_CurrenctPlayer, i_OpponentPlayer, i_CurrentCell, i_CandidateCell);
             }
             else
             {
@@ -132,7 +182,7 @@ namespace ChceckersLogicComponents
         }
 
         // Make an eat move.
-        internal bool MakeEatMove(PlayerSign i_CurrenctPlayer, BoardCell i_CurrentCell, BoardCell i_EnemyCell, BoardCell i_DestCell)
+        private bool makeAnEatMove(PlayerSign i_CurrenctPlayer, BoardCell i_CurrentCell, BoardCell i_EnemyCell, BoardCell i_DestCell)
         {
             bool isEatMoveSucceeded = false;
 
@@ -152,7 +202,7 @@ namespace ChceckersLogicComponents
         }
 
         //Applied Non eating move on the board.
-        private bool makeNonEatingMove(Player i_PlayerThatMakesTheMove, Player i_OpponentPlayer, BoardCell i_CurrentCell, BoardCell i_CandidateCell)
+        private bool makeANonEatingMove(Player i_PlayerThatMakesTheMove, Player i_OpponentPlayer, BoardCell i_CurrentCell, BoardCell i_CandidateCell)
         {
             bool isMoveBeenMadeSuccessfully = false;
             CheckersBoardCell candidateLocationInfo = r_GameBoard.GetPlayerCellFromBoard(i_CandidateCell);
@@ -200,6 +250,7 @@ namespace ChceckersLogicComponents
         private bool isCurrentMoveRightNonEatingMove(Player i_PlayerThatMakesAMove, BoardCell i_CurrentLocation, BoardCell i_CandidatePoint)
         {
             bool isRightMoveLegit = false;
+            bool areCellsDifferent = false;
             int horizontalDistance = i_CurrentLocation.X - i_CandidatePoint.X;
             int verticalDistance = (int)(i_CurrentLocation.Y - i_CandidatePoint.Y);
             int horizontalDistanceFactor = (i_PlayerThatMakesAMove.PlayerSign == PlayerSign.first) ? 1 : -1;
@@ -211,8 +262,19 @@ namespace ChceckersLogicComponents
             {
                 candiateLocatin = r_GameBoard.GetPlayerCellFromBoard(i_CandidatePoint).CellSign;
                 currentPlayerSign = r_GameBoard.GetPlayerCellFromBoard(i_CurrentLocation).CellSign;
-                isRightMoveLegit = horizontalDistance == horizontalDistanceFactor && verticalDistance == verticalDistanceFactor;
-                isRightMoveLegit &= currentPlayerSign == i_PlayerThatMakesAMove.PlayerSign && candiateLocatin == PlayerSign.empty;
+                areCellsDifferent = currentPlayerSign == i_PlayerThatMakesAMove.PlayerSign && candiateLocatin == PlayerSign.empty;
+
+                if (areCellsDifferent)
+                {
+                    if (IsCurrentTroopAKing(i_CurrentLocation))
+                    {
+                        isRightMoveLegit = Math.Abs(verticalDistance) == Math.Abs(verticalDistanceFactor) && Math.Abs(horizontalDistance) == Math.Abs(horizontalDistanceFactor);
+                    }
+                    else
+                    {
+                        isRightMoveLegit = horizontalDistance == horizontalDistanceFactor && verticalDistance == verticalDistanceFactor;
+                    }
+                }
             }
             else
             {
@@ -226,6 +288,7 @@ namespace ChceckersLogicComponents
         private bool isCurrentMoveLeftNonEatingMove(Player i_PlayerThatMakesAMove, BoardCell i_CurrentLocation, BoardCell i_CandidatePoint)
         {
             bool isLeftMoveLegit = false;
+            bool areCellsDifferent = false;
             int horizontalDistance = i_CurrentLocation.X - i_CandidatePoint.X;
             int verticalDistance = (int)(i_CurrentLocation.Y - i_CandidatePoint.Y);
             int horizontalDistanceFactor = (i_PlayerThatMakesAMove.PlayerSign == PlayerSign.first) ? 1 : -1;
@@ -237,8 +300,19 @@ namespace ChceckersLogicComponents
             {
                 candiateLocatin = r_GameBoard.GetPlayerCellFromBoard(i_CandidatePoint).CellSign;
                 currentPlayerSign = r_GameBoard.GetPlayerCellFromBoard(i_CurrentLocation).CellSign;
-                isLeftMoveLegit = horizontalDistance == horizontalDistanceFactor && verticalDistance == verticalDistanceFactor;
-                isLeftMoveLegit &= currentPlayerSign == i_PlayerThatMakesAMove.PlayerSign && candiateLocatin == PlayerSign.empty;
+                areCellsDifferent = currentPlayerSign == i_PlayerThatMakesAMove.PlayerSign && candiateLocatin == PlayerSign.empty;
+
+                if (areCellsDifferent)
+                {
+                    if (IsCurrentTroopAKing(i_CurrentLocation))
+                    {
+                        isLeftMoveLegit = Math.Abs(verticalDistance) == Math.Abs(verticalDistanceFactor) && Math.Abs(horizontalDistance) == Math.Abs(horizontalDistanceFactor);
+                    }
+                    else
+                    {
+                        isLeftMoveLegit = horizontalDistance == horizontalDistanceFactor && verticalDistance == verticalDistanceFactor;
+                    }
+                }
             }
             else
             {
@@ -294,7 +368,7 @@ namespace ChceckersLogicComponents
                 verticalDistanceFactor = 2;
                 horizontalDistanceFactor = 2;
 
-                if (isCurrentTroopAKing(i_CurrentLocation))
+                if (IsCurrentTroopAKing(i_CurrentLocation))
                 {
                     isMoveAnEatMove = (Math.Abs(horizontalDistance) == horizontalDistanceFactor
                         && Math.Abs(verticalDistance) == verticalDistanceFactor);
@@ -306,7 +380,7 @@ namespace ChceckersLogicComponents
             return isMoveAnEatMove;
         }
 
-        private bool isCurrentTroopAKing(BoardCell i_CurrentMovingTroop)
+        internal bool IsCurrentTroopAKing(BoardCell i_CurrentMovingTroop)
         {
             bool isTroopAKing = false;
 
@@ -323,98 +397,4 @@ namespace ChceckersLogicComponents
         }
     }
 }
-
-        /*        private KeyValuePair<BoardCell, bool> isNextMoveIsAnEatMove(Player i_PlayerThatMakesTheMove, Player i_Opponent, BoardCell i_CurrentCell, BoardCell i_CandidateCell)
-                {
-                    bool isEatMove = false;
-                    BoardCell cellToReturn = new BoardCell(0, 0);
-                    BoardCell rightMove = cellToReturn;
-                    BoardCell leftMove = cellToReturn;
-
-                    if (!isCurrentTroopAKing(i_CurrentCell))
-                    {
-                        if (i_PlayerThatMakesTheMove.PlayerSign == PlayerSign.first)
-                        {
-                            rightMove = new BoardCell(i_CurrentCell.X - 1, i_CurrentCell.Y + 1, null, PlayerSign.second);
-                            leftMove = new BoardCell(i_CurrentCell.X - 1, i_CurrentCell.Y - 1, null, PlayerSign.second);
-                        }
-                        else if (i_PlayerThatMakesTheMove.PlayerSign == PlayerSign.second)
-                        {
-                            rightMove = new BoardCell(i_CurrentCell.X + 1, i_CurrentCell.Y + 1, null, PlayerSign.first);
-                            leftMove = new BoardCell(i_CurrentCell.X + 1, i_CurrentCell.Y - 1, null, PlayerSign.first);
-                        }
-
-                        if (isMoveCellReadyToBeEaten(i_CurrentCell, rightMove))
-                        {
-                            cellToReturn = rightMove;
-                            isEatMove = true;
-                        }
-                        else if (isMoveCellReadyToBeEaten(i_CurrentCell, leftMove))
-                        {
-                            cellToReturn = leftMove;
-                            isEatMove = true;
-                        }
-                        else
-                        {
-                            throw new Exception("Indices not in range of board size!");
-                        }
-                    }
-
-                    return new KeyValuePair<BoardCell, bool>(cellToReturn, isEatMove);
-                }*/
-
-        /*        internal bool IsPlayerTryingToMoveForwardOrBackward(PlayerSign i_PlayerThatMakesTheMove, BoardCell i_CurrentTroopLocation, BoardCell i_NextTroopLocation)
-        {
-            bool isTryingToMoveForward = isMovingForwardAllowed(i_PlayerThatMakesTheMove, i_CurrentTroopLocation, i_NextTroopLocation);
-            bool isTryingToMoveBackwards = isMovingBackwardAllowed(i_PlayerThatMakesTheMove, i_CurrentTroopLocation, i_NextTroopLocation);
-            bool isNextCellLocationSignIsEmpty = r_GameBoard.GetPlayerCellFromBoard(i_NextTroopLocation).CellSign == PlayerSign.empty;
-            bool isCurrentPlayerSlotIsNotEmpty = r_GameBoard.GetPlayerCellFromBoard(i_CurrentTroopLocation).CellSign != PlayerSign.empty;
-
-            return (isTryingToMoveForward || isTryingToMoveBackwards) && isNextCellLocationSignIsEmpty && isCurrentPlayerSlotIsNotEmpty;
-        }*/
-
-        /*        private bool isMovingBackwardAllowed(PlayerSign i_PlayerThatMakesTheMoveSign, BoardCell i_CurrentTroopLocation, BoardCell i_NextTroopLocation)
-                {
-                    bool isTryingToMoveBackward = i_NextTroopLocation.Y == i_CurrentTroopLocation.Y && isCurrentTroopAKing(i_CurrentTroopLocation);
-                    int bound4MovingBackwards = 3;
-
-                    if (isTryingToMoveBackward == true)
-                    {
-                        if (i_PlayerThatMakesTheMoveSign == PlayerSign.first)
-                        {
-                            bound4MovingBackwards = r_GameBoard.BoardSize - 3;
-                            isTryingToMoveBackward &= (i_CurrentTroopLocation.X + 1 == i_NextTroopLocation.X && i_CurrentTroopLocation.X < bound4MovingBackwards);
-                        }
-                        else if (i_PlayerThatMakesTheMoveSign == PlayerSign.second)
-                        {
-                            bound4MovingBackwards = 3;
-                            isTryingToMoveBackward &= (i_CurrentTroopLocation.X - 1 == i_NextTroopLocation.X && i_CurrentTroopLocation.X >= bound4MovingBackwards);
-                        }
-                    }
-
-                    return isTryingToMoveBackward;
-                }*/
-
-        /*        private bool isMovingForwardAllowed(PlayerSign i_PlayerThatMakesTheMoveSign, BoardCell i_CurrentTroopLocation, BoardCell i_NextTroopLocation)
-                {
-                    bool isTryingToMoveForward = i_CurrentTroopLocation.Y == i_NextTroopLocation.Y && isCurrentTroopAKing(i_CurrentTroopLocation);
-                    bool isCurrentPlayerAKing = *//*r_RowsNumbersForADoubleMove.Contains(i_CurrentTroopLocation.X) && *//*isCurrentTroopAKing(i_CurrentTroopLocation);
-                    int currentRowIndex = i_CurrentTroopLocation.X;
-
-                    if (isTryingToMoveForward)
-                    {
-                        if (i_PlayerThatMakesTheMoveSign == PlayerSign.first)
-                        {
-                            //currentRowIndex = (isCurrentPlayerAKing) ? currentRowIndex - 1 : currentRowIndex ;
-                            isTryingToMoveForward &= (*//*currentRowIndex == i_NextTroopLocation.X ||*//* currentRowIndex - 1 == i_NextTroopLocation.X);
-                        }
-                        else if (i_PlayerThatMakesTheMoveSign == PlayerSign.second)
-                        {
-                            //currentRowIndex = (isCurrentPlayerAKing) ? currentRowIndex + 1: currentRowIndex ;
-                            isTryingToMoveForward &= *//*currentRowIndex == i_NextTroopLocation.X ||*//* currentRowIndex + 1 == i_NextTroopLocation.X;
-                        }
-                    }
-
-                    return isTryingToMoveForward && isCurrentPlayerAKing;
-                }*/
     

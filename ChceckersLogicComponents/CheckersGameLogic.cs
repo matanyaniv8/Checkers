@@ -12,7 +12,7 @@ namespace ChceckersLogicComponents
     {
         private RandomMoveGenerator r_RandomMoveGenerator = null;
         private const int k_NumberOfTroops = 12;
-        private const string k_NotCorrectPlayerHasChosenMessage = "please choose a soldier from your troops";
+        private const string k_NotCorrectPlayerHasChosenMessage = "Please choose a soldier from your troops";
         public Player FirstPlayer { get; private set; }
         public Player SecondPlayer { get; private set;}
         internal Board CheckersBoard { get; private set; }

@@ -34,9 +34,10 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(999, 806);
+            this.ClientSize = new System.Drawing.Size(1738, 1541);
             this.Name = "CheckersBoard";
             this.Text = "CheckersBoard";
+            this.Load += new System.EventHandler(this.CheckersBoard_Load);
             this.ResumeLayout(false);
 
         }

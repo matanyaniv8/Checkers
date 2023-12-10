@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Windows.Forms;
 
 namespace CheckersWinform
 {
@@ -10,8 +11,12 @@ namespace CheckersWinform
     {
         public static void Main(string[] args)
         {
-            CheckersGameLogic gameItSelf = new CheckersGameLogic("Matan", "Computer", false);
-            run(gameItSelf);
+            /* CheckersGameLogic gameItSelf = new CheckersGameLogic("Matan", "Computer", false);
+             run(gameItSelf);*/
+            Application.EnableVisualStyles();
+            CheckersBoard game = new CheckersBoard("Matan");
+            game.ShowDialog();
+            
         }
 
         private static void run(CheckersGameLogic i_GameBoard)

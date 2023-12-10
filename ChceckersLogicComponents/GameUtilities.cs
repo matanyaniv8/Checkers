@@ -1,7 +1,4 @@
 ﻿using System;
-using static ChceckersLogicComponents.GameUtilities;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 
 namespace ChceckersLogicComponents
 {
@@ -11,23 +8,7 @@ namespace ChceckersLogicComponents
     /// </summary>
     
     public static class GameUtilities
-    {
-        //
-        private static readonly Dictionary<string, BoardCell> r_PossibleComputerEatDirections = new Dictionary<string, BoardCell>
-        {
-                { "UpLeft", new BoardCell((int)eDirection.Up, (int)eDirection.Left, null, ePlayerSign.empty) },
-                {"UpRight", new BoardCell((int)eDirection.Up, (int)eDirection.Right, null, ePlayerSign.empty) },
-        };
-
-        //
-        private static readonly Dictionary<string, BoardCell> r_PossibleMoveDirections = new Dictionary<string, BoardCell>
-        {
-            {"Forward", new BoardCell((int)eDirection.Up, 0, null, ePlayerSign.empty)},
-            {"Backward", new BoardCell((int)eDirection.Down, 0, null, ePlayerSign.empty)},
-            {"DoubleForward", new BoardCell((int)eDirection.StartRowUp, 0, null, ePlayerSign.empty)},
-            {"DoubleBackward", new BoardCell((int)eDirection.Down, 0, null , ePlayerSign.empty) }
-        };
-        
+    {   
         private const string k_NotValidEnumType = "Not Acceptable Value Inserted!";
         public enum ePlayersType
         {

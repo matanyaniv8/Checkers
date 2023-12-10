@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using PlayerSign = ChceckersLogicComponents.GameUtilities.ePlayerSign;
 
 namespace ChceckersLogicComponents
 {
     /// <summary>
     /// This Class is a wrapper for random move generator given a Checkers Board.
-    /// It collects all the Player's troops and generates all the possible moves 
-    /// Like forward, backwards, Diagonal if the players eats an opponent troop.
+    /// It collects all the Player's troops and generates all the possible moves.
     /// </summary>
     
     internal enum eDirection
@@ -20,16 +18,8 @@ namespace ChceckersLogicComponents
         Right = 1,
     }
 
-    internal enum eRandomMoveDecision
-    {
-        Eat = 0,
-        NoEat = 1
-    }
-
     internal class RandomMoveGenerator
     {
-        private const int k_DecisionTreshold = 5;
-        private const int k_MaxTreshold = 10;
         private readonly Board r_CheckersBoard = null;
         private readonly Random r_RandomIndexGenerator = new Random();
 
@@ -37,16 +27,26 @@ namespace ChceckersLogicComponents
         
         private Dictionary<string, BoardCell> r_PossibleComputerEatDirections = new Dictionary<string, BoardCell>
         {
-                { "UpLeft", new BoardCell((int)eDirection.Up +1, (int)eDirection.Left -1, null, PlayerSign.second) },
-                {"UpRight", new BoardCell((int)eDirection.Up + 1, (int)eDirection.Right +1, null, PlayerSign.second) },
+                {"UpLeft", new BoardCell((int) eDirection.Up * 2,(int) eDirection.Left * 2) },
+                {"UpRight", new BoardCell((int) eDirection.Up * 2,(int) eDirection.Right * 2) },
         };
 
         private Dictionary<string, BoardCell> r_PossibleMoveDirections = new Dictionary<string, BoardCell>
         {
-            {"Forward", new BoardCell((int)eDirection.Up, (int)eDirection.Left, null, PlayerSign.second)},
-            {"Backward", new BoardCell((int)eDirection.Down, (int)eDirection.Right, null, PlayerSign.second)},
-            /*{"DoubleForward", new BoardCell((int)eDirection.StartRowUp, 0, null, PlayerSign.second)},
-            {"DoubleBackward", new BoardCell((int)eDirection.Down, 0, null , PlayerSign.second) }*/
+            {"ForwardLeft", new BoardCell((int) eDirection.Up,(int) eDirection.Left)},
+            {"ForwardRight", new BoardCell((int) eDirection.Down,(int) eDirection.Right)}
+        };
+
+        private readonly Dictionary<string, BoardCell> r_PossibleKingComputerEatingMoves = new Dictionary<string, BoardCell>
+        {
+            {"DownLeft", new BoardCell((int)eDirection.Down * 2, (int)eDirection.Left * 2)},
+            {"DownRight", new BoardCell((int)eDirection.Down * 2, (int)eDirection.Right *2)}
+        };
+
+        private Dictionary<string, BoardCell> r_PossibleComputerNonEatingMoves = new Dictionary<string, BoardCell>
+        {
+            {"BackwardLeft", new BoardCell((int)eDirection.Down, (int)eDirection.Left)},
+            {"BackwardRight", new BoardCell((int) eDirection.Down,(int) eDirection.Right)}
         };
 
         internal RandomMoveGenerator(Player i_ComputerPlayer, Board i_GameBoard)
@@ -63,10 +63,11 @@ namespace ChceckersLogicComponents
             BoardCell randomTargetPoint = randomStartPoint;
             int randomIndex;
 
-            while (!isRandomPointFound)
+            while (!isRandomPointFound && potenailsCandidates.Count != 0)
             {
                 randomIndex = r_RandomIndexGenerator.Next(0, potenailsCandidates.Count);
                 randomStartPoint = potenailsCandidates[randomIndex];
+                potenailsCandidates.RemoveAt(randomIndex);
                 randomTargetPoint = genrateRandomPointGivenAPoint(randomStartPoint);
 
                 if (randomStartPoint != randomTargetPoint)
@@ -102,11 +103,12 @@ namespace ChceckersLogicComponents
 
         private BoardCell genrateRandomPointGivenAPoint(BoardCell i_currentPoint)
         {
-            List<BoardCell> possibleMoves = getPossibleEatMoves(i_currentPoint);
+            List<BoardCell> possibleEatingMoves = getPossibleEatMoves(i_currentPoint);
+            List<BoardCell> possibleMoves = getPossibleMovingMoves(i_currentPoint);
             int randomIndex = 0;
             BoardCell returningPoint = i_currentPoint;
 
-            possibleMoves = possibleMoves.Concat(getPossibleMovingMoves(i_currentPoint)).ToList();
+            possibleMoves = possibleMoves.Concat(possibleEatingMoves).ToList();
             
             if(possibleMoves.Count != 0)
             {
@@ -119,12 +121,15 @@ namespace ChceckersLogicComponents
 
         private List<BoardCell> getPossibleEatMoves(BoardCell i_currentPoint)
         {
+            bool isCurrentCellAKingTroop = r_CheckersBoard.MovesManager.IsCurrentTroopAKing(i_currentPoint);
+            List<BoardCell> possibleDirection = isCurrentCellAKingTroop ? r_PossibleComputerEatDirections.Values.Concat(r_PossibleKingComputerEatingMoves.Values).ToList() : r_PossibleComputerEatDirections.Values.ToList();
             List<BoardCell> possibleMoves = new List<BoardCell>();
-            BoardCell returningPoint;
+            BoardCell returningPoint = i_currentPoint;
             int xAxis = 0;
             int yAxis = 0;
-            
-            foreach (BoardCell DiagonalDiretionPoint in r_PossibleComputerEatDirections.Values)
+            int listCount = possibleDirection.Count;
+
+            foreach (BoardCell DiagonalDiretionPoint in possibleDirection)
             {
                 try
                 {
@@ -149,12 +154,14 @@ namespace ChceckersLogicComponents
 
         private List<BoardCell> getPossibleMovingMoves(BoardCell i_currentPoint)
         {
+            bool isCurrentCellAKingTroop = r_CheckersBoard.MovesManager.IsCurrentTroopAKing(i_currentPoint);
+            List<BoardCell> possibleDirection = isCurrentCellAKingTroop ? r_PossibleMoveDirections.Values.Concat(r_PossibleComputerNonEatingMoves.Values).ToList() : r_PossibleMoveDirections.Values.ToList();
             List<BoardCell> possibleMoves = new List<BoardCell>();
             BoardCell returningPoint = i_currentPoint;
             int xAxis = 0;
             int yAxis = 0;
 
-            foreach (BoardCell DiagonalDiretionPoint in r_PossibleMoveDirections.Values)
+            foreach (BoardCell DiagonalDiretionPoint in possibleDirection)
             {
                 try
                 {
