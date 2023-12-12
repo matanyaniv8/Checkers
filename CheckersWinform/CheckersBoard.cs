@@ -129,13 +129,13 @@ namespace CheckersWinform
 
         private void UpdateAndProceedGame()
         {
+            PrintBoard();
+           
             string message = "";
             string messageCaption = "";
             string winnerName = m_GameLogicComponent.CurrentPlayerTurn.Name;
             bool isAPopWindowNeedsToBeSent = false;
             
-            PrintBoard();
-
             if (m_GameLogicComponent.IsThereAWin())
             {
                 message = string.Format($@"The Winner is {winnerName}!");

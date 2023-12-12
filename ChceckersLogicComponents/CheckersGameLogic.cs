@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace ChceckersLogicComponents
 {
@@ -38,7 +39,12 @@ namespace ChceckersLogicComponents
             }
         }
 
-        public Player MakeAMove(BoardCell i_CurrentPlayerTroopLocation, BoardCell i_SelectedLocationOnBoard )
+        public Player MakeAMove(BoardCell i_CurrentPlayerTroopLocation, BoardCell i_SelectedLocationOnBoard)
+        {
+            return makeAMove(i_CurrentPlayerTroopLocation, i_SelectedLocationOnBoard);
+        }
+
+        private Player makeAMove(BoardCell i_CurrentPlayerTroopLocation, BoardCell i_SelectedLocationOnBoard )
         {
             Player lastPlayedPlayer = CurrentPlayerTurn;
 
@@ -47,6 +53,7 @@ namespace ChceckersLogicComponents
                 if (CurrentPlayerTurn.PlayerSign == CheckersBoard.GetPlayerCellFromBoard(i_CurrentPlayerTroopLocation).CellSign)
                 {
                     CheckersBoard.MakeAMove(CurrentPlayerTurn, OpponentPlayer, i_CurrentPlayerTroopLocation, i_SelectedLocationOnBoard);
+                    Debug.WriteLine($"HumanMove : {i_CurrentPlayerTroopLocation.ToString()}, {i_SelectedLocationOnBoard.ToString()}");
                 }
                 else
                 {
@@ -57,11 +64,11 @@ namespace ChceckersLogicComponents
             CurrentPlayerTurn = OpponentPlayer;
             OpponentPlayer = lastPlayedPlayer;
 
-/*            if(CurrentPlayerTurn.PlayerType == GameUtilities.ePlayersType.Computer)
+            if (CurrentPlayerTurn.PlayerType == GameUtilities.ePlayersType.Computer)
             {
                 MakeRandomMove();
                 CurrentPlayerTurn = FirstPlayer;
-            }*/
+            }
 
             return lastPlayedPlayer;
         }
@@ -73,9 +80,9 @@ namespace ChceckersLogicComponents
             if(SecondPlayer.PlayerType == GameUtilities.ePlayersType.Computer 
                 && currentAndTargetCells.Key != currentAndTargetCells.Value)
             {
-                MakeAMove(currentAndTargetCells.Key, currentAndTargetCells.Value);
-                Console.WriteLine(currentAndTargetCells.Key.ToString());
-                Console.WriteLine(currentAndTargetCells.Value.ToString());
+                makeAMove(currentAndTargetCells.Key, currentAndTargetCells.Value);
+                Debug.WriteLine(currentAndTargetCells.Key.ToString());
+                Debug.WriteLine(currentAndTargetCells.Value.ToString());
             }
         }
 
