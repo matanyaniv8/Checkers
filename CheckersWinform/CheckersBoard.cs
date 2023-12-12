@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Threading;
 
 namespace CheckersWinform
 {
@@ -22,6 +23,7 @@ namespace CheckersWinform
         private BoardCell m_FirstCoords = new BoardCell().DefualtCell;
         private BoardCell m_SecondCoords = new BoardCell().DefualtCell;
         private bool m_IsFirstCoordsInsetred = false;
+        private Player m_CurrentPlayerSign = null;
         public CheckersBoard(string i_FirstPlayerName, string i_SecondPlayerName = "Computer", bool i_IsSecondPlayerHuman = false)
         {
             m_GameLogicComponent = new CheckersGameLogic(i_FirstPlayerName, i_SecondPlayerName, i_IsSecondPlayerHuman);
@@ -94,12 +96,56 @@ namespace CheckersWinform
 
             if(clickedButton != null )
             {
+                convertBtnTagToIdices(ref rowIndex, ref colIndex, clickedButton.Tag.ToString());
+                
                 if(m_IsFirstCoordsInsetred == false)
                 {
+                    m_FirstCoords = new BoardCell(rowIndex, colIndex);
+                    m_IsFirstCoordsInsetred = true;
+                }
+                else
+                {
+                    m_SecondCoords = new BoardCell(rowIndex, colIndex);
+                    m_IsFirstCoordsInsetred = false;
 
+                    try
+                    {
+                        m_GameLogicComponent.MakeAMove(m_FirstCoords, m_SecondCoords);
+                        UpdateAndProceedGame();
+                    }
+                    catch (Exception exceptionToCatch)
+                    {
+                        MessageBox.Show(exceptionToCatch.Message);
+                    }
+                }
+
+                if (m_GameLogicComponent.CurrentPlayerTurn.PlayerType == GameUtilities.ePlayersType.Computer)
+                {
+                    m_GameLogicComponent.MakeRandomMove();
+                    UpdateAndProceedGame();
                 }
             }
+        }
 
+        private void UpdateAndProceedGame()
+        {
+            string message = "";
+            string messageCaption = "";
+            string winnerName = m_GameLogicComponent.CurrentPlayerTurn.Name;
+            bool isAPopWindowNeedsToBeSent = false;
+            
+            PrintBoard();
+
+            if (m_GameLogicComponent.IsThereAWin())
+            {
+                message = string.Format($@"The Winner is {winnerName}!");
+                isAPopWindowNeedsToBeSent = true;
+            }
+
+/*            if (isAPopWindowNeedsToBeSent)
+            {
+                askUserToPlayAnotherRound(message, messageCaption);
+            }*/
         }
 
         private void convertBtnTagToIdices(ref int i_RowNumber, ref int i_ColNumber, string i_ButtonTag)
@@ -123,7 +169,6 @@ namespace CheckersWinform
             string btnTag = "";
             Button btn = null;
 
-            // Set label position ??
             for (int colIndex = 0; colIndex < m_BoardSize; colIndex++)
             {
                 btnTag = $"{i_Rowindex},{colIndex}";
@@ -141,10 +186,6 @@ namespace CheckersWinform
             }
         }
 
-        private void setButtonBackColor(Button i_Button, int i_RowIndex, int i_ColIndex)
-        {
-
-        }
         private void setBtnLabelAndBackColor(Button i_ButtonToChangeSettings, PlayerSign i_CellSign)
         {
             if (i_ButtonToChangeSettings != null)

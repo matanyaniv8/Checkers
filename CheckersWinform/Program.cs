@@ -9,14 +9,15 @@ namespace CheckersWinform
 {
     public class Program
     {
+        [STAThread]
         public static void Main(string[] args)
         {
-            /* CheckersGameLogic gameItSelf = new CheckersGameLogic("Matan", "Computer", false);
-             run(gameItSelf);*/
+/*            CheckersGameLogic gameItSelf = new CheckersGameLogic("Matan", "Computer", false);
+            run(gameItSelf);*/
             Application.EnableVisualStyles();
-            CheckersBoard game = new CheckersBoard("Matan");
+            CheckersBoard game = new CheckersBoard("Matan", "Computer", false);
             game.ShowDialog();
-            
+
         }
 
         private static void run(CheckersGameLogic i_GameBoard)

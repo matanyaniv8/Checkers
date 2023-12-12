@@ -338,12 +338,11 @@ namespace ChceckersLogicComponents
             bool isCellsAreDiffrents = currentCellSign != candidateCellSign && candidateCellSign == PlayerSign.empty;
             int horizontalDistance = (int)(i_CurrentLocation.X - i_CandidatePoint.X);
             int verticalDistance = (int)(i_CurrentLocation.Y - i_CandidatePoint.Y);
-            bool isRightMove = horizontalDistance != verticalDistance;
             bool isMoveAnEatMove = false;
-            int horizontalDistanceFactor = 2;
+            int horizontalDistanceFactor = (currentCellSign == PlayerSign.first) ? 2 : -2;
             int verticalDistanceFactor = horizontalDistanceFactor;
 
-            if (isRightMove)
+            if (isRightEatMove(i_CurrentLocation, i_CandidatePoint))
             {
                 if (currentCellSign == PlayerSign.first)
                 {
@@ -378,6 +377,17 @@ namespace ChceckersLogicComponents
             isMoveAnEatMove = isMoveAnEatMove && getEnemyCellIfAvaiableOnAnEatMove(i_PlayerThatMakesAMove, i_CurrentLocation, i_CandidatePoint).Value;
 
             return isMoveAnEatMove;
+        }
+
+        private bool isRightEatMove(BoardCell i_CurrentLocation, BoardCell i_CandidatePoint)
+        {
+            int horizontalDistance = i_CurrentLocation.X - i_CandidatePoint.X;
+            int verticalDistance = (int)(i_CurrentLocation.Y - i_CandidatePoint.Y);
+            bool isFirstPlayerRightMove = horizontalDistance == 2 && verticalDistance == -2;
+            bool isSecondPlayerRightMove = horizontalDistance == -2 && verticalDistance == 2;
+
+            return isFirstPlayerRightMove || isSecondPlayerRightMove;
+
         }
 
         internal bool IsCurrentTroopAKing(BoardCell i_CurrentMovingTroop)

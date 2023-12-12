@@ -44,7 +44,7 @@ namespace ChceckersLogicComponents
 
             if (!IsThereAWin())
             {
-                if (CurrentPlayerTurn.PlayerSign == i_CurrentPlayerTroopLocation.CheckersReleventInfo.CellSign)
+                if (CurrentPlayerTurn.PlayerSign == CheckersBoard.GetPlayerCellFromBoard(i_CurrentPlayerTroopLocation).CellSign)
                 {
                     CheckersBoard.MakeAMove(CurrentPlayerTurn, OpponentPlayer, i_CurrentPlayerTroopLocation, i_SelectedLocationOnBoard);
                 }
@@ -56,6 +56,12 @@ namespace ChceckersLogicComponents
 
             CurrentPlayerTurn = OpponentPlayer;
             OpponentPlayer = lastPlayedPlayer;
+
+/*            if(CurrentPlayerTurn.PlayerType == GameUtilities.ePlayersType.Computer)
+            {
+                MakeRandomMove();
+                CurrentPlayerTurn = FirstPlayer;
+            }*/
 
             return lastPlayedPlayer;
         }
