@@ -26,37 +26,26 @@ Make sure you have the latest version of .NET installed on your machine.
 Clone the Repository:
 bash
 Copy code
-git clone https://github.com/yourusername/checkers-csharp.git
+git clone https://github.com/matanyaniv8/Checkers.git
 cd checkers-csharp
-Run the Game:
-arduino
-Copy code
-dotnet run
+
 Follow On-Screen Instructions:
-The game will prompt you to enter your moves in a format like "A3 to B4."
+Just pick a troop an follow the guidance on the game and make your moves!
 Enjoy the Game:
 Play with a friend and have fun!
+
 Files
 
 Program.cs: Contains the main game logic and user interface.
 Board.cs: Manages the game board and piece placement.
 Player.cs: Represents a player with their pieces.
-Piece.cs: Defines the properties and behavior of a checkers piece.
+BoardCell.cs: Defines the properties and behavior of a checkers piece.
 Customization
 
 Feel free to customize and extend the game as you wish! You can add features such as:
-
-Additional game modes (e.g., single-player against an AI).
-Improved graphics or a graphical user interface.
-Save and load game functionality.
-Keep track of the game history.
-Implement a scoring system.
-License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
 
 Acknowledgments
 
 This project is inspired by the classic game of checkers.
 Special thanks to the C# and .NET community for their valuable contributions.
-Have fun playing checkers in C#! If you have any questions or suggestions, feel free to open an issue or contribute to the project.
+Have fun playing checkers in C#!
